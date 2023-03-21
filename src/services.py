@@ -2,6 +2,8 @@ from connect import *
 
 
 def is_a_user(email):
+    user = execute_query('SELECT * FROM User WHERE Email = %(email)s;', {'email': email})
+    print(user)
     return True
 
 
