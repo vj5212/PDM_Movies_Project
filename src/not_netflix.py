@@ -33,10 +33,10 @@ def main():
 def welcome():
     while True:
         email = input('Welcome to NotNetflix! Please enter your email address to sign up or login: ')
-        isUser = is_a_user(email)
+        is_user = is_a_user(email)
 
         # Salt the input before saving it
-        if not isUser:
+        if not is_user:
             while True:
                 password = input('Create a password for your account: ')
                 verify_password = input('Verify the password matches: ')
@@ -48,7 +48,7 @@ def welcome():
             password = input('Enter your password to login: ')
 
         try:
-            user = login(email, password)
+            user = login(email, password, is_user)
             print('Login successful!\n')
             return user
         except Exception:
@@ -193,15 +193,15 @@ def __movie_helper__(is_collection=False):
             ADD --movieId : Adds the movie matching the given ID to the collection
             REMOVE --movieId : Removes movie matching the given ID from the collection
             DELETE : deletes the currently modified collection
-            SEARCH --[name | year | cast | studio | genre] --searchTerm : search by and on term
-            SORT --[name | year | studio | genre] --[ASC | DESC] : sort current display by
+            SEARCH --[title | year | cast | studio | genre] --searchTerm : search by and on term
+            SORT --[title | year | studio | genre] --[ASC | DESC] : sort current display by
         """)
     else:
         print("""
             WATCH --movieId : Watch the movie with the given ID
             RATE --movieId --rating : Rate the movie with the given ID
-            SEARCH --[name | year | cast | studio | genre] --searchTerm : search by and on term
-            SORT --[name | year | studio | genre] --[ASC | DESC] : sort current display by
+            SEARCH --[title | year | cast | studio | genre] --searchTerm : search by and on term
+            SORT --[title | year | studio | genre] --[ASC | DESC] : sort current display by
         """)
 
 
