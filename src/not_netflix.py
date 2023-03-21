@@ -1,13 +1,17 @@
 # Main executable for program. Command line based
 from services import *
 
+USERID = 0
+FIRSTNAME = 1
+LASTNAME = 2
+
 
 def main():
     global user
     user = welcome()
 
     # print('Welcome {} to NotNetflix! Type a category below or sign out!\n'.format(user.firstName + ' ' + user.lastName))
-    print('Welcome {} to NotNetflix!\n'.format('Darek Dunbar'))
+    print('Welcome {} to NotNetflix!\n'.format(user[FIRSTNAME]))
     while True:
         print('## [MENU] ## COLLECTIONS ## MOVIES ## FRIENDS ##\n')
         print('COLLECTIONS')
@@ -78,11 +82,12 @@ def collection_commands():
             case 'CREATE':
                 # ask for collection name
                 name = input('Enter a name for your collection: ')
-                if is_a_collection(name, user.id) != '':
+                if not is_a_collection(name, user.id):
                     create_user_collection(name, user.id)
                     # display new list of collections
                     display_collections(user.id)
-                print('Collection already exists')
+                else:
+                    print('Collection already exists')
             case 'MODIFY':
                 # ask for collection name to modify
                 movie_commands(True)

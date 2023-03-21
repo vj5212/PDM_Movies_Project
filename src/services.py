@@ -28,7 +28,7 @@ def login(email, password, exists):
             """INSERT INTO "User" ("firstName","lastName","creationDate","lastAccessDate",email,password,username) VALUES (%s,%s,%s,%s,%s,%s,%s);""",
             (first_name, last_name, today, today, email, password, username)
         )
-    user = execute_query_one("SELECT * FROM \"User\" WHERE 'email' = %s AND 'password' = %s", (email, password))
+    user = execute_query_one('SELECT * FROM "User" WHERE email = %s AND password = %s;', (email, password))
     if user != None and exists:
         insert_or_update("UPDATE \"User\" SET lastAccessDate = %s WHERE 'email' = %s", (today, email))
     return user
@@ -40,8 +40,10 @@ def is_a_collection(name, user_id):
         name (string): name of collection
         user_id (int): id of user
     """
-    query = 'SELECT collectionName FROM COLLECTION WHERE collectionName=' + name + ' AND userId=' + str(user_id)
-    return execute_query(query)
+    query = execute_query_one('SELECT collectionName FROM "Collection" WHERE collectionName = %s AND userId = %s;', (name, user_id))
+    if query == None:
+        return False
+    return True
 
 def create_user_collection(name, user_id):
     """Creates a new collection with title 'name' for a user
@@ -50,17 +52,15 @@ def create_user_collection(name, user_id):
         name (string): name of collection
         user_id (int): id of user
     """
-    query = 'INSERT INTO COLLECTION (collectionName, userId) VALUES (' + name + ',' + str(user_id) + ')'
-    return execute_query(query)
-
+    insert_or_update('INSERT INTO "Collection" (collectionName, userId) VALUES (%s, %s);', (name, user_id))
 
 def display_collections(user_id):
     """Displays list of collections for a user
     Args:
         user_id (int): id of user
     """
-    query = 'SELECT * FROM COLLECTION WHERE userId=' + str(user_id)
-    return execute_query(query)
+    collections = execute_query_all('SELECT * FROM "COLLECTION" WHERE userId=%s;', user_id)
+    print(collections)
 
 def display_collection_movies():
     pass
