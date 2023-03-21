@@ -18,14 +18,34 @@ def login(email, password):
     """
     pass
 
+def is_a_collection(name, user_id):
+    """Checks if a collection of title 'name' exists for a user
 
-def create_user_collection():
-    pass
+    Args:
+        name (string): name of collection
+        user_id (int): id of user
+    """
+    query = 'SELECT collectionName FROM COLLECTION WHERE collectionName=' + name + ' AND userId=' + str(user_id)
+    return execute_query(query)
+
+def create_user_collection(name, user_id):
+    """Creates a new collection with title 'name' for a user
+
+    Args:
+        name (string): name of collection
+        user_id (int): id of user
+    """
+    query = 'INSERT INTO COLLECTION (collectionName, userId) VALUES (' + name + ',' + str(user_id) + ')'
+    return execute_query(query)
 
 
-def display_collections():
-    pass
-
+def display_collections(user_id):
+    """Displays list of collections for a user
+    Args:
+        user_id (int): id of user
+    """
+    query = 'SELECT * FROM COLLECTION WHERE userId=' + str(user_id)
+    return execute_query(query)
 
 def display_collection_movies():
     pass

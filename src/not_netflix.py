@@ -3,7 +3,7 @@ from services import *
 
 
 def main():
-
+    global user
     user = welcome()
 
     # print('Welcome {} to NotNetflix! Type a category below or sign out!\n'.format(user.firstName + ' ' + user.lastName))
@@ -25,7 +25,7 @@ def main():
                 friend_commands()
             case 'QUIT':
                 print('Thank you for using NotNetflix!')
-                break;
+                break
             case _:
                 print('Invalid command. Try again.')
         
@@ -71,14 +71,18 @@ def collection_commands():
         args = selection.split(' ')
         match args[0].upper():
             case 'DISPLAY':
-                display_collections()
+                display_collections(user.id)
             case 'WATCH':
                 # get collection name
                 watch_collection()
             case 'CREATE':
                 # ask for collection name
-                create_user_collection()
-                # display new list of collections
+                name = input('Enter a name for your collection: ')
+                if is_a_collection(name, user.id) != '':
+                    create_user_collection(name, user.id)
+                    # display new list of collections
+                    display_collections(user.id)
+                print('Collection already exists')
             case 'MODIFY':
                 # ask for collection name to modify
                 movie_commands(True)
