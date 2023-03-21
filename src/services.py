@@ -1,3 +1,6 @@
+from connect import *
+
+
 def is_a_user(email):
     return True
 
