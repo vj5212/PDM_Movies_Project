@@ -10,7 +10,7 @@ username = os.getenv("CS_USER")
 password = os.getenv("CS_PASS")
 dbName = "p320_34"
 
-def execute_query_one(exe_string, params):
+def execute_query_one(exe_string, data):
     try:
         with SSHTunnelForwarder(('starbug.cs.rit.edu', 22),
                                 ssh_username=username,
@@ -28,9 +28,8 @@ def execute_query_one(exe_string, params):
 
             conn = psycopg2.connect(**params)
             curs = conn.cursor()
-            result = curs.execute(exe_string, params)
-            print(result)
-            return result.fetchone()
+            curs.execute(exe_string, data)
+            return curs.fetchone()
     except Exception as e:
         print("Connection failed")
         print(e)
@@ -39,7 +38,7 @@ def execute_query_one(exe_string, params):
         conn.close()
 
 
-def execute_query_all(exe_string, params):
+def execute_query_all(exe_string, data):
     try:
         with SSHTunnelForwarder(('starbug.cs.rit.edu', 22),
                                 ssh_username=username,
@@ -56,9 +55,8 @@ def execute_query_all(exe_string, params):
 
             conn = psycopg2.connect(**params)
             curs = conn.cursor()
-            result = curs.execute(exe_string, params)
-            print(result)
-            return result.fetchall()
+            curs.execute(exe_string, data)
+            return curs.fetchall()
     except Exception as e:
         print("Connection failed")
         print(e)

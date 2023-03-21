@@ -1,9 +1,10 @@
 from connect import *
 
 
-def is_a_user(email):
-    user = execute_query('SELECT * FROM User WHERE Email = %(email)s;', {'email': email})
-    print(user)
+def is_a_user(user_email):
+    user = execute_query_one("SELECT * FROM User WHERE 'email' = %s;", (user_email, ))
+    if user == None:
+        return False
     return True
 
 
