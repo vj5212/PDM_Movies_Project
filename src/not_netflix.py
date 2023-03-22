@@ -1,6 +1,7 @@
 # Main executable for program. Command line based
 from services import *
 
+
 def main():
     global user
     user = welcome()
@@ -14,7 +15,7 @@ def main():
         print('FRIENDS')
         print('QUIT')
         category = input()
-        
+
         match category.upper():
             case 'COLLECTIONS':
                 collection_commands()
@@ -27,7 +28,7 @@ def main():
                 break
             case _:
                 print('Invalid command. Try again.')
-        
+
 
 def welcome():
     while True:
@@ -55,7 +56,6 @@ def welcome():
 
 
 def collection_commands():
-    
     while True:
         print('## MENU ## [COLLECTIONS] ## MOVIES ## FRIENDS ##\n')
 
@@ -65,7 +65,7 @@ def collection_commands():
         print('MODIFY')
         print('HELP')
         print('BACK')
-        
+
         selection = input('Type a command: ')
         args = selection.split(' ')
         match args[0].upper():
@@ -131,11 +131,13 @@ def movie_commands(is_collection=False):
 
                     if is_a_collection(collectionName, user['userId']) == False:
                         print("that is not a correct collection name")
-                        movie_commands(True)
+                        #movie_commands(True)
+                        break
 
                     NewcollectionName = input("What would you like to rename it to? ")
-                    rename_collection(collectionName,NewcollectionName,user['userId'])
-                    print("Renamed collection from: ",collectionName ," to ", NewcollectionName)
+                    rename_collection(collectionName, NewcollectionName, user['userId'])
+                    print("Renamed collection from: ", collectionName, " to ", NewcollectionName)
+
             case 'LIST':
                 if is_collection:
                     display_user_collection()
@@ -146,31 +148,29 @@ def movie_commands(is_collection=False):
 
                     collectionName = input("Which of the collection would you like to add to?")
 
-                    if is_a_collection(collectionName, user['userId'])==False:
+                    if is_a_collection(collectionName, user['userId']) == False:
                         print("that is not a correct collection name")
-                        movie_commands(True)
+                        break
+                        #movie_commands(True)
 
                     movies = display_all_movies()
-                    i=0;
+                    i = 0;
                     for movie in movies:
-                        i=i+1
-                        print(movie[0], ": " ,movie[1])
-                        if(i==11):
+                        i = i + 1
+                        print(movie[0], ": ", movie[1])
+                        if i == 11:
                             break
 
                     movie_id = input("Which of the movie would you like to add(pick number) ?")
 
                     if movie_exists(movie_id):
 
-                        if not movie_in_collection(collectionName,int(movie_id),user['userId']):
-                            add_to_collection(collectionName,int(movie_id),user['userId'])
+                        if not movie_in_collection(collectionName, int(movie_id), user['userId']):
+                            add_to_collection(collectionName, int(movie_id), user['userId'])
                         else:
                             print("Movie is already in the collection")
                     else:
                         print("That movie id does not exist")
-
-
-
 
             case 'REMOVE':
                 if is_collection:
@@ -180,23 +180,33 @@ def movie_commands(is_collection=False):
 
                     if is_a_collection(collectionName, user['userId']) == False:
                         print("that is not a correct collection name")
-                        movie_commands(True)
-
+                        # movie_commands(True)
+                        break
                     movies = display_collection_movies(collectionName, user['userId'])
                     for movie in movies:
                         print(movie[0], ": ", movie[1])
 
-                    movie_id = input("Which of the movie would you like to remove (pick number) ?")
+                    movie_id = input("Which of the movie would you like to remove (pick number)? ")
 
                     if movie_in_collection(collectionName, int(movie_id), user['userId']):
                         remove_from_collection(collectionName, int(movie_id), user['userId'])
                         print("REMOVED!!")
                     else:
                         print("Movie id you entered is not in the collection")
+
             case 'DELETE':
                 if is_collection:
-                    delete_collection()
-                    break
+                    display_user_collection()
+                    collectionName = input("Which Collection would you like to delete? ")
+
+                    if is_a_collection(collectionName, user['userId']) == False:
+                        print("that is not a correct collection name")
+                        # movie_commands(True)
+                        break
+
+                    delete_collection(collectionName, user['userId'])
+                    print("Deleted ", collectionName)
+
             case 'WATCH':
                 watch_movie()
             case 'RATE':
@@ -220,6 +230,8 @@ def display_user_collection():
     collections = display_collections(user['userId'])
     for collection in collections:
         print(collection['collectionName'])
+
+
 def friend_commands():
     while True:
         print('## MENU ## COLLECTIONS ## MOVIES ## [FRIENDS] ##\n')
@@ -280,7 +292,7 @@ def __friend_helper__():
         ADD --userEmail : add user to friends list
         REMOVE --userEmail : remove user from friends list
     """)
-            
+
 
 if __name__ == '__main__':
     main()

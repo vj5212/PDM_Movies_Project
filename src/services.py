@@ -90,6 +90,10 @@ def display_collections(user_id):
         collection_list.append(convert_tuple(collection, COLLECTION_SYNTAX))
     return collection_list
 
+def list_collections(Collection_Name,user_id):
+    collections = execute_query_all('SELECT * FROM "CollectionItem" ORDER BY ASC WHERE "CollectionName"=%s AND  "userId"=%s; ', (Collection_Name,user_id,))
+    print(collections)
+
 def display_all_movies():
     """Displays all the movies in the database
      Args:
