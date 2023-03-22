@@ -75,7 +75,9 @@ def collection_commands():
                     print(collection['collectionName'])
             case 'WATCH':
                 # get collection name
-                watch_collection()
+                name = input('Enter the collection you would like to watch')
+                if is_a_collection(name, user['userId']):
+                    watch_collection()
             case 'CREATE':
                 # ask for collection name
                 name = input('Enter a name for your collection: ')

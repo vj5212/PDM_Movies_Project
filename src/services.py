@@ -7,7 +7,7 @@ USER_SYNTAX = ('userId', 'firstName', 'lastName', 'creationDate', 'lastAccessDat
 
 COLLECTION_SYNTAX = ('collectionName', 'userId')
 
-MOVIE_SYNTAX=('movieId','mpaa','title''length')
+MOVIE_SYNTAX=('movieId','mpaa','title','length')
 
 def convert_tuple(tuple, syntax):
     return {syntax[i]: tuple[i] for i, _ in enumerate(tuple)}
@@ -242,7 +242,10 @@ def watch_movie():
     pass
 
 
-def watch_collection():
+def watch_collection(collection_name, user_id):
+    movies = execute_query_all('SELECT "movieId" FROM "CollectionItem" WHERE "collectionName"=%s and "userId"=%s;', (collection_name,user_id))
+#    for movie in movies:
+
     pass
 
 
