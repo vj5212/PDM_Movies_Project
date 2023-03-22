@@ -93,7 +93,6 @@ def display_collections(user_id):
 def display_all_movies():
     """Displays all the movies in the database
      Args:
-
      """
     movies = execute_query_all('SELECT * FROM "Movie"',(""))
     movie_list = []
@@ -106,10 +105,46 @@ def display_all_movies():
     #print(movie_list)
     return movie_list
 
+def display_one_movies(movie_id):
+    """Displays the movie name with the id
+     Args:
+         movie_id: id of the movie
+     """
+    collections = execute_query_all('SELECT "title" FROM "Movie" WHERE "movieId"=%s;', (movie_id, ))
+    return collections[0]
 
-def display_collection_movies():
-    pass
 
+
+def display_collection_movies(collection_name,user_id):
+    """displays all the movies in a user collection
+        Args:
+            collection_name(str): name of the collection
+            user_id (int): id of user
+        """
+    collections = execute_query_all('SELECT "movieId" FROM "CollectionItem" WHERE "collectionName"=%s and "userId"=%s;', (collection_name,user_id))
+
+
+
+    movie_list=[]
+    for movie in collections:
+        new_list=[]
+        new_list.append(movie[0])
+        e=display_one_movies(movie[0])
+        new_list.append(e[0])
+        movie_list.append(new_list)
+    return movie_list
+
+
+def movie_exists(movie_id):
+    """checks to see if a movie exists
+        Args:
+            movie_id (int): id of the movie
+        """
+    query = execute_query_one('SELECT * FROM "Movie" WHERE "movieId" = %s;',
+                              (movie_id,))
+    if query == None:
+        return False
+    return True
 
 def add_to_collection(collection_name, movie_id,user_id):
     """adds a movie to a user's collection
@@ -121,8 +156,6 @@ def add_to_collection(collection_name, movie_id,user_id):
     print("adding")
     insert_or_update('INSERT INTO "CollectionItem" ("collectionName", "movieId","userId") VALUES (%s, %s,%s);',
                      (collection_name,movie_id, user_id))
-    #return execute_query_one(query)
-
 
 
 def remove_from_collection(collection_name, movie_id,user_id):
@@ -132,7 +165,7 @@ def remove_from_collection(collection_name, movie_id,user_id):
         collection_name(str): name of the collection
         user_id (int): id of user
     """
-    insert_or_update('DELETE FROM "CollectionItem" WHERE collectionName=%s and movieId=%s and userId=%s', (collection_name,movie_id, user_id))
+    insert_or_update('DELETE FROM "CollectionItem" WHERE "collectionName"=%s and "movieId"=%s and "userId"=%s', (collection_name,movie_id, user_id))
 
 
 
@@ -143,7 +176,9 @@ def rename_collection(old_collection_name,new_collection_name, user_id):
         new_collection_name(str): name of the new collection
         user_id (int): id of user
     """
-    insert_or_update('UPDATE "CollectionItem" SET "collectionName" = %s WHERE collectionName = %s and userId=%s;', (new_collection_name, old_collection_name,user_id))
+    #insert_or_update('UPDATE "CollectionItem" SET "collectionName" = %s WHERE "collectionName" = %s and "userId"=%s;', (new_collection_name, old_collection_name,user_id))
+
+    insert_or_update('UPDATE "Collection" SET "collectionName" = %s WHERE "collectionName" = %s and "userId"=%s;', (new_collection_name, old_collection_name,user_id))
 
 
 def delete_collection(collection_name,user_id):
@@ -152,7 +187,7 @@ def delete_collection(collection_name,user_id):
          collection_name(str): name of the collection
          user_id (int): id of user
     """
-    insert_or_update('DELETE FROM "Collection" WHERE collectionName=%s and userId=%s', (collection_name, user_id))
+    insert_or_update('DELETE FROM "Collection" WHERE "collectionName"=%s and "userId"=%s', (collection_name, user_id))
 
 
 
