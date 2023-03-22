@@ -1,6 +1,16 @@
 from connect import *
 from datetime import datetime
 
+
+USER_SYNTAX = ('userId', 'firstName', 'lastName', 'creationDate', 'lastAccessDate', 'email',
+               'password', 'username')
+
+COLLECTION_SYNTAX = ('collectionName', 'userId')
+
+def convert_tuple(tuple, syntax):
+    return {syntax[i]: tuple[i] for i, _ in enumerate(tuple)}
+
+
 def is_a_user(user_email):
     user = execute_query_one('SELECT * FROM "User" WHERE email = %s;', (user_email, ))
     if user == None:
@@ -30,8 +40,8 @@ def login(email, password, exists):
         )
     user = execute_query_one('SELECT * FROM "User" WHERE email = %s AND password = %s;', (email, password))
     if user != None and exists:
-        insert_or_update("UPDATE \"User\" SET lastAccessDate = %s WHERE 'email' = %s", (today, email))
-    return user
+        insert_or_update('UPDATE "User" SET "lastAccessDate" = %s WHERE email = %s;', (today, email))
+    return convert_tuple(user, USER_SYNTAX)
 
 def is_a_collection(name, user_id):
     """Checks if a collection of title 'name' exists for a user
@@ -40,7 +50,7 @@ def is_a_collection(name, user_id):
         name (string): name of collection
         user_id (int): id of user
     """
-    query = execute_query_one('SELECT collectionName FROM "Collection" WHERE collectionName = %s AND userId = %s;', (name, user_id))
+    query = execute_query_one('SELECT * FROM "Collection" WHERE collectionName = %s AND userId = %s;', (name, user_id))
     if query == None:
         return False
     return True
@@ -59,8 +69,11 @@ def display_collections(user_id):
     Args:
         user_id (int): id of user
     """
-    collections = execute_query_all('SELECT * FROM "COLLECTION" WHERE userId=%s;', user_id)
-    print(collections)
+    collections = execute_query_all('SELECT * FROM "Collection" WHERE "userId"=%s;', (user_id, ))
+    collection_list = []
+    for collection in collections:
+        collection_list.append(convert_tuple(collection, COLLECTION_SYNTAX))
+    return collection_list
 
 def display_collection_movies():
     pass
