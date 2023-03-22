@@ -1,12 +1,12 @@
 # Main executable for program. Command line based
 from services import *
+import math
 
 
 def main():
     global user
     user = welcome()
 
-    # print('Welcome {} to NotNetflix! Type a category below or sign out!\n'.format(user.firstName + ' ' + user.lastName))
     print('Welcome {} to NotNetflix!\n'.format(user['firstName']))
     while True:
         print('## [MENU] ## COLLECTIONS ## MOVIES ## FRIENDS ##\n')
@@ -14,7 +14,7 @@ def main():
         print('MOVIES')
         print('FRIENDS')
         print('QUIT')
-        category = input()
+        category = input("Start with a category: ")
 
         match category.upper():
             case 'COLLECTIONS':
@@ -107,9 +107,13 @@ def collection_commands():
                 break
             case _:
                 print('Invalid command. Try again!\n\n')
+        input('Press enter to finish.')
 
 
 def movie_commands(is_collection=False, collection_name=None):
+    # Search terms stored for use in sort
+    category = None
+    term = None
     while True:
         if is_collection:
             print('## MENU ## [COLLECTION-MOVIES] ## MOVIES ## FRIENDS ##\n')
@@ -198,19 +202,48 @@ def movie_commands(is_collection=False, collection_name=None):
                     print("Deleted ", collectionName)
 
             case 'WATCH':
-                watch_movie()
+                movieId = args[1] if len(args) > 1 else None
+                if movieId == None:
+                    print('Id of movie watched is required.')
+                else:
+                    watch_movie(movieId, user['userId'])
+                    print('Movie Id ' + movieId + ' has been watched.')
             case 'RATE':
-                rate_movie()
+                movieId = args[1] if len(args) > 1 else None
+                rating = args[2] if len(args) > 1 else 'No rating entered'
+                if movieId == None:
+                    print('Id of movie rated is required.')
+                else:
+                    rate_movie(movieId, rating, user['userId'])
+                    print('Movie Id ' + movieId + ' has been rated as ' + rating)
             case 'SEARCH':
-                search_movies()
+                category = args[1] if len(args) > 1 else None
+                term = ' '.join(args[2:]) if len(args) > 2 else None
+                print('\nsearching...')
+                if category == None:
+                    results = search_movies()
+                else:
+                    movieIds = search_movies_by_term(category, term)
+                    results = search_movies(movieIds)
+
+                __movie_results_helper__(results)
             case 'SORT':
-                sort_movies()
+                sort_category = args[1] if len(args) > 1 else None
+                direction = args[2] if len(args) > 2 else None
+                print('\nsorting results...')
+                movieIds = search_movies_by_term(category, term)
+                results = search_movies(movieIds, get_sort_movies_clause(sort_category, direction.upper() == 'ASC'))
+                __movie_results_helper__(results)
             case 'HELP':
                 __movie_helper__(is_collection)
+            case 'BACK':
+                print('Returning to main menu...')
+                break
             case 'FINISH':
                 if is_collection:
                     print('Returning to collection menu...')
                     break
+        input('Press enter to finish.')
 
 
 def display_user_collection():
@@ -232,17 +265,26 @@ def friend_commands():
         args = selection.split(' ')
         match args[0].upper():
             case 'SEARCH':
-                search_friends()
+                email = args[1] if len(args) > 1 else None
+                results = search_friends(email)
+                __friend_results_helper__(results)
             case 'ADD':
-                add_friend()
+                userId = args[1] if len(args) > 1 else print('No id specified. Try again')
+                if userId:
+                    add_friend(userId, user['userId'])
+                    print('User with ID {} was followed'.format(userId))
             case 'REMOVE':
-                remove_friend()
+                userId = args[1] if len(args) > 1 else print(
+                    'No id specified. Try again')
+                if userId:
+                    remove_friend(userId, user['userId'])
+                    print('User with ID {} was unfollowed'.format(userId))
             case 'HELP':
                 __friend_helper__()
             case 'BACK':
                 print('Returning to main menu...')
                 break
-
+        input('Press enter to finish.')
 
 def __collection_helper__():
     print("""
@@ -279,6 +321,39 @@ def __friend_helper__():
         ADD --userId : add user to friends list
         REMOVE --userId : remove user from friends list
     """)
+
+
+def __movie_results_helper__(results):
+    for movie in results:
+        if movie[7] != None:
+            ratings = [eval(rating)
+                            for rating in movie[7].split(', ')]
+        else:
+            ratings = []
+        avg_rating = sum(ratings) / \
+                            len(ratings) if len(ratings) > 0 else None
+        print()
+        print('Movie: ' + movie[1])
+        print('MPAA: ' + movie[2])
+        hours = math.floor(movie[3])
+        minutes = (movie[3] * 60) % 60
+        print('Runtime: {}h {}m'.format(str(hours), str(minutes)))
+        print('Directors: ' +
+                movie[5] if movie[5] != None else 'Directors: No directors found')
+        print('Cast: ' + movie[4] if movie[4]
+                != None else 'Cast: No cast found')
+        print('movieId: ' + str(movie[0]))
+        print('User Rating: ' + str(round(avg_rating, 1))
+                if avg_rating != None else 'Ratings: No ratings found')
+    print('Results found: ' + str(len(results)))
+
+
+def __friend_results_helper__(results):
+    for friend in results:
+        print()
+        print('UserId: {}'.format(friend[0]))
+        print('Email: {}'.format(friend[5]))
+        print('Name: {}'.format(friend[1] + ' ' + friend[2]))
 
 
 if __name__ == '__main__':
