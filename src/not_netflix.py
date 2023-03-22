@@ -85,6 +85,7 @@ def collection_commands():
                     collections = display_collections(user['userId'])
                     for collection in collections:
                         print(collection['collectionName'])
+
                 else:
                     print('Collection already exists')
             case 'MODIFY':
@@ -125,10 +126,35 @@ def movie_commands(is_collection=False):
                     rename_collection()
             case 'LIST':
                 if is_collection:
-                    display_collection_movies()
+                    display_user_collection()
+
             case 'ADD':
                 if is_collection:
-                    add_to_collection()
+                    display_user_collection()
+
+                    collectionName = input("Which of the collection would you like to add to?")
+
+                    if is_a_collection(collectionName, user['userId'])==False:
+                        print("that is not a correct collection name")
+                        movie_commands(True)
+
+                    movies = display_all_movies()
+                    i=0;
+                    for movie in movies:
+                        i=i+1
+                        print(movie[0], ": " ,movie[1])
+                        if(i==11):
+                            break
+
+                    movie_id = input("Which of the movie would you like to add(pick number) ?")
+
+                    if not movie_in_collection(collectionName,int(movie_id),user['userId']):
+                        add_to_collection(collectionName,int(movie_id),user['userId'])
+                    else:
+                        print("Movie is already in the collection")
+
+
+
             case 'REMOVE':
                 if is_collection:
                     remove_from_collection()
@@ -155,6 +181,10 @@ def movie_commands(is_collection=False):
                 break
 
 
+def display_user_collection():
+    collections = display_collections(user['userId'])
+    for collection in collections:
+        print(collection['collectionName'])
 def friend_commands():
     while True:
         print('## MENU ## COLLECTIONS ## MOVIES ## [FRIENDS] ##\n')

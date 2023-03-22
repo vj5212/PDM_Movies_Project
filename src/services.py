@@ -7,6 +7,8 @@ USER_SYNTAX = ('userId', 'firstName', 'lastName', 'creationDate', 'lastAccessDat
 
 COLLECTION_SYNTAX = ('collectionName', 'userId')
 
+MOVIE_SYNTAX=('movieId','mpaa','title''length')
+
 def convert_tuple(tuple, syntax):
     return {syntax[i]: tuple[i] for i, _ in enumerate(tuple)}
 
@@ -50,11 +52,22 @@ def is_a_collection(name, user_id):
         name (string): name of collection
         user_id (int): id of user
     """
-    query = execute_query_one('SELECT * FROM "Collection" WHERE collectionName = %s AND userId = %s;', (name, user_id))
+    query = execute_query_one('SELECT * FROM "Collection" WHERE "collectionName" = %s AND "userId" = %s;', (name, user_id))
     if query == None:
         return False
     return True
 
+def movie_in_collection(name,movie_id, user_id):
+    """Checks if a collection of title 'name' exists for a user
+
+    Args:
+        name (string): name of collection
+        user_id (int): id of user
+    """
+    query = execute_query_one('SELECT * FROM "CollectionItem" WHERE "collectionName" = %s AND "movieId"=%s AND "userId" = %s;', (name, movie_id,user_id))
+    if query == None:
+        return False
+    return True
 def create_user_collection(name, user_id):
     """Creates a new collection with title 'name' for a user
 
@@ -62,7 +75,9 @@ def create_user_collection(name, user_id):
         name (string): name of collection
         user_id (int): id of user
     """
-    insert_or_update('INSERT INTO "Collection" (collectionName, userId) VALUES (%s, %s);', (name, user_id))
+
+    insert_or_update(
+        'INSERT INTO "Collection" ("collectionName", "userId") VALUES (%s, %s);', (name, user_id))
 
 def display_collections(user_id):
     """Displays list of collections for a user
@@ -75,24 +90,71 @@ def display_collections(user_id):
         collection_list.append(convert_tuple(collection, COLLECTION_SYNTAX))
     return collection_list
 
+def display_all_movies():
+    """Displays all the movies in the database
+     Args:
+
+     """
+    movies = execute_query_all('SELECT * FROM "Movie"',(""))
+    movie_list = []
+    #print(collections)
+    for movie in movies:
+        new_list=[]
+        new_list.append(movie[0])
+        new_list.append(movie[2])
+        movie_list.append(new_list)
+    #print(movie_list)
+    return movie_list
+
+
 def display_collection_movies():
     pass
 
 
-def add_to_collection():
-    pass
+def add_to_collection(collection_name, movie_id,user_id):
+    """adds a movie to a user's collection
+    Args:
+        movie_id (int): id of the movie
+        collection_name(str): name of the collection
+        user_id (int): id of user
+    """
+    print("adding")
+    insert_or_update('INSERT INTO "CollectionItem" ("collectionName", "movieId","userId") VALUES (%s, %s,%s);',
+                     (collection_name,movie_id, user_id))
+    #return execute_query_one(query)
 
 
-def remove_from_collection():
-    pass
+
+def remove_from_collection(collection_name, movie_id,user_id):
+    """removes a movie to a user's collection
+    Args:
+        movie_id (int): id of the movie
+        collection_name(str): name of the collection
+        user_id (int): id of user
+    """
+    insert_or_update('DELETE FROM "CollectionItem" WHERE collectionName=%s and movieId=%s and userId=%s', (collection_name,movie_id, user_id))
 
 
-def rename_collection():
-    pass
+
+def rename_collection(old_collection_name,new_collection_name, user_id):
+    """rename a collection of a user
+    Args:
+        old_collection_name(str): name of the collection
+        new_collection_name(str): name of the new collection
+        user_id (int): id of user
+    """
+    insert_or_update('UPDATE "CollectionItem" SET "collectionName" = %s WHERE collectionName = %s and userId=%s;', (new_collection_name, old_collection_name,user_id))
 
 
-def delete_collection():
-    pass
+def delete_collection(collection_name,user_id):
+    """deletes a collection of a user
+     Args:
+         collection_name(str): name of the collection
+         user_id (int): id of user
+    """
+    insert_or_update('DELETE FROM "Collection" WHERE collectionName=%s and userId=%s', (collection_name, user_id))
+
+
 
 
 search_query = None
