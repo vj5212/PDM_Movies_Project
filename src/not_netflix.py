@@ -204,8 +204,8 @@ def __movie_helper__(is_collection=False):
 def __friend_helper__():
     print("""
         SEARCH --userEmail : search for users with the specified email
-        ADD --userEmail : add user to friends list
-        REMOVE --userEmail : remove user from friends list
+        ADD --userId : add user to friends list
+        REMOVE --userId : remove user from friends list
     """)
             
 
