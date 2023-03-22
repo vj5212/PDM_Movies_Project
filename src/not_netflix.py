@@ -71,13 +71,16 @@ def collection_commands():
         match args[0].upper():
             case 'DISPLAY':
                 collections = display_collections(user['userId'])
+                print('Collection Name\t\t# of Movies\t\tLength of Movies')
                 for collection in collections:
                     print(collection['collectionName'])
             case 'WATCH':
                 # get collection name
                 name = input('Enter the collection you would like to watch')
                 if is_a_collection(name, user['userId']):
-                    watch_collection()
+                    watch_collection(name, user['userId'])
+                else:
+                    print('Not a valid collection')
             case 'CREATE':
                 # ask for collection name
                 name = input('Enter a name for your collection: ')
@@ -92,7 +95,11 @@ def collection_commands():
                     print('Collection already exists')
             case 'MODIFY':
                 # ask for collection name to modify
-                movie_commands(True)
+                name = input('Enter a collection to modify: ')
+                if is_a_collection(name, user['userId']):
+                    movie_commands(True, name)
+                else:
+                    print('Not a valid collection')
             case 'HELP':
                 __collection_helper__()
             case 'BACK':
@@ -102,7 +109,7 @@ def collection_commands():
                 print('Invalid command. Try again!\n\n')
 
 
-def movie_commands(is_collection=False):
+def movie_commands(is_collection=False, collection_name=None):
     while True:
         if is_collection:
             print('## MENU ## [COLLECTION-MOVIES] ## MOVIES ## FRIENDS ##\n')
@@ -125,36 +132,19 @@ def movie_commands(is_collection=False):
         match args[0].upper():
             case 'RENAME':
                 if is_collection:
-                    display_user_collection()
-
-                    collectionName = input("Which of the collection would you like to rename: ")
-
-                    if is_a_collection(collectionName, user['userId']) == False:
-                        print("that is not a correct collection name")
-                        #movie_commands(True)
-                        break
-
                     NewcollectionName = input("What would you like to rename it to? ")
-                    rename_collection(collectionName, NewcollectionName, user['userId'])
-                    print("Renamed collection from: ", collectionName, " to ", NewcollectionName)
+                    rename_collection(collection_name, NewcollectionName, user['userId'])
+                    print("Renamed collection from: ", collection_name, " to ", NewcollectionName)
 
             case 'LIST':
                 if is_collection:
-                    display_user_collection()
+                    for movie in display_collection_movies(collection_name, user['userId']):
+                        print(movie)
 
             case 'ADD':
                 if is_collection:
-                    display_user_collection()
-
-                    collectionName = input("Which of the collection would you like to add to?")
-
-                    if is_a_collection(collectionName, user['userId']) == False:
-                        print("that is not a correct collection name")
-                        break
-                        #movie_commands(True)
-
                     movies = display_all_movies()
-                    i = 0;
+                    i = 0
                     for movie in movies:
                         i = i + 1
                         print(movie[0], ": ", movie[1])
@@ -221,9 +211,6 @@ def movie_commands(is_collection=False):
                 if is_collection:
                     print('Returning to collection menu...')
                     break
-            case 'BACK':
-                print('Returning to main menu...')
-                break
 
 
 def display_user_collection():

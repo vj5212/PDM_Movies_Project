@@ -7,7 +7,9 @@ USER_SYNTAX = ('userId', 'firstName', 'lastName', 'creationDate', 'lastAccessDat
 
 COLLECTION_SYNTAX = ('collectionName', 'userId')
 
-MOVIE_SYNTAX=('movieId','mpaa','title','length')
+MOVIE_SYNTAX = ('movieId','mpaa','title','length')
+
+WATCHING_SYNTAX = ('watchtime', 'userId', 'movieId')
 
 def convert_tuple(tuple, syntax):
     return {syntax[i]: tuple[i] for i, _ in enumerate(tuple)}
@@ -19,7 +21,7 @@ def is_a_user(user_email):
         return False
     return True
 
-user = None
+#user = None
 def login(email, password, exists):
     """Login a user or create a new one if they don't exist
 
@@ -125,12 +127,11 @@ def display_collection_movies(collection_name,user_id):
             collection_name(str): name of the collection
             user_id (int): id of user
         """
-    collections = execute_query_all('SELECT "movieId" FROM "CollectionItem" WHERE "collectionName"=%s and "userId"=%s;', (collection_name,user_id))
-
+    movies = execute_query_all('SELECT "movieId" FROM "CollectionItem" WHERE "collectionName"=%s and "userId"=%s;', (collection_name,user_id))
 
 
     movie_list=[]
-    for movie in collections:
+    for movie in movies:
         new_list=[]
         new_list.append(movie[0])
         e=display_one_movies(movie[0])
@@ -142,7 +143,7 @@ def display_collection_movies(collection_name,user_id):
 def movie_exists(movie_id):
     """checks to see if a movie exists
         Args:
-            movie_id (int): id of the movie
+            movie_id (string): id of the movie
         """
     query = execute_query_one('SELECT * FROM "Movie" WHERE "movieId" = %s;',
                               (movie_id,))
@@ -252,11 +253,11 @@ def sort_movies(sort_by, is_asc):
                 sort_query = "ORDER BY title {}".format(direction)
             case _:
                 sort_query = "ORDER BY title ASC"
-        final_query = '{} {}'.format(search_query, sort_query)  
+        final_query = '{} {}'.format(search_query, sort_query)
         return execute_query_all(final_query)
 
 
-def rate_movie(movieId, rating):
+def rate_movie(movieId, rating, user_id):
     """Rate a movie
 
     Users can rate a movie (star rating)
@@ -265,28 +266,27 @@ def rate_movie(movieId, rating):
         movieId (string): ID of movie
         rating (number): 1-5 rating
     """
-    old_rating = execute_query_one('SELECT "movieId", "userId" FROM "Rating" WHERE movieId = %s AND userId = %s LIMIT 1', (movieId, user.userId))
+    old_rating = execute_query_one('SELECT "movieId", "userId" FROM "Rating" WHERE movieId = %s AND userId = %s LIMIT 1', (movieId, user_id))
     if old_rating == None:
-        insert_or_update('INSERT INTO "Rating" (rating, "movieId", "userId") VALUES (%s, %s, %s)', (rating, movieId, user.userId))
+        insert_or_update('INSERT INTO "Rating" (rating, "movieId", "userId") VALUES (%s, %s, %s)', (rating, movieId, user_id))
     else:
-        insert_or_update('UPDATE "Rating" SET rating = %s WHERE movieId = %s AND userId = %s', (rating, movieId, user.userId))
+        insert_or_update('UPDATE "Rating" SET rating = %s WHERE movieId = %s AND userId = %s', (rating, movieId, user_id))
 
 
-def watch_movie(movieId):
+def watch_movie(movieId, user_id):
     """Watch a movie
 
     Args:
         movieId (string): ID of movie
     """
     today = datetime.now()
-    insert_or_update('INSERT INTO "Watching" ("movieId", "userId", watchtime) VALUES (%s, %s, %s)', (movieId, user.userId, today))
+    insert_or_update('INSERT INTO "Watching" ("movieId", "userId", watchtime) VALUES (%s, %s, %s)', (movieId, user_id, today))
 
 
 def watch_collection(collection_name, user_id):
     movies = execute_query_all('SELECT "movieId" FROM "CollectionItem" WHERE "collectionName"=%s and "userId"=%s;', (collection_name,user_id))
-#    for movie in movies:
-
-    pass
+    for movie in movies:
+        watch_movie(movie[0], user_id)
 
 
 def search_friends(userEmail):
