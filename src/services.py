@@ -59,6 +59,9 @@ def is_a_collection(name, user_id):
         return False
     return True
 
+def display_user_collections(user_id):
+    query = execute_query_all('SELECT ')
+
 def movie_in_collection(name,movie_id, user_id):
     """Checks if a collection of title 'name' exists for a user
 
@@ -86,11 +89,17 @@ def display_collections(user_id):
     Args:
         user_id (int): id of user
     """
-    collections = execute_query_all('SELECT * FROM "Collection" WHERE "userId"=%s;', (user_id, ))
+    collections = execute_query_all('SELECT "collectionName", COUNT("movieId"), SUM("length") FROM "Collection" WHERE "userId"=%s;', (user_id, ))
     collection_list = []
     for collection in collections:
         collection_list.append(convert_tuple(collection, COLLECTION_SYNTAX))
     return collection_list
+
+def count_movies_collection(collection_name, user_id ):
+    num_movies = execute_query_one('SELECT COUNT("movieId") FROM "CollectionItem" WHERE "userId" = %s AND '
+                                   '"collectionName" = %s;', (user_id, collection_name))
+    return num_movies[0]
+
 
 def list_collections(Collection_Name,user_id):
     collections = execute_query_all('SELECT * FROM "CollectionItem" ORDER BY ASC WHERE "CollectionName"=%s AND  "userId"=%s; ', (Collection_Name,user_id,))
@@ -116,8 +125,8 @@ def display_one_movies(movie_id):
      Args:
          movie_id: id of the movie
      """
-    collections = execute_query_all('SELECT "title" FROM "Movie" WHERE "movieId"=%s;', (movie_id, ))
-    return collections[0]
+    movie = execute_query_all('SELECT * FROM "Movie" WHERE "movieId"=%s;', (movie_id, ))
+    return convert_tuple(movie[0], MOVIE_SYNTAX)
 
 
 
@@ -127,17 +136,12 @@ def display_collection_movies(collection_name,user_id):
             collection_name(str): name of the collection
             user_id (int): id of user
         """
-    movies = execute_query_all('SELECT "movieId" FROM "CollectionItem" WHERE "collectionName"=%s and "userId"=%s;', (collection_name,user_id))
-
-
-    movie_list=[]
-    for movie in movies:
-        new_list=[]
-        new_list.append(movie[0])
-        e=display_one_movies(movie[0])
-        new_list.append(e[0])
-        movie_list.append(new_list)
+    movie_id_tuple = execute_query_all('SELECT "movieId" FROM "CollectionItem" WHERE "collectionName"=%s and "userId"=%s;', (collection_name,user_id))
+    movie_list = []
+    for movie_id in movie_id_tuple:
+        movie_list.append(display_one_movies(movie_id))
     return movie_list
+
 
 
 def movie_exists(movie_id):
@@ -304,7 +308,7 @@ def add_friend(userId):
     Args:
         userId (string): id of user
     """
-    insert_or_update('INSERT INTO "Following" (follower, followee) VALUES (%s, %s)', (user.userId, userId))
+    insert_or_update('INSERT INTO "Following" (follower, followee) VALUES (%s, %s)', (userId, userId))
 
 
 def remove_friend(userId):
@@ -315,6 +319,6 @@ def remove_friend(userId):
     Args:
         userId (string): user id
     """
-    insert_or_update('DELETE FROM "Following" WHERE follower = %s AND followee = %s)', (user.userId, userId))
+    insert_or_update('DELETE FROM "Following" WHERE follower = %s AND followee = %s)', (userId, userId))
 
 

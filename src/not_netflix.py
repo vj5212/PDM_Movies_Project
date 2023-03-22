@@ -70,10 +70,21 @@ def collection_commands():
         args = selection.split(' ')
         match args[0].upper():
             case 'DISPLAY':
+                collection_name_header = "Collection Name"
+                movie_count_header = "# of Movies"
+                runtime_sum_header = "Length of Movies"
                 collections = display_collections(user['userId'])
-                print('Collection Name\t\t# of Movies\t\tLength of Movies')
+                print(f"{collection_name_header:>16}{movie_count_header:>16}{runtime_sum_header:>24}")
+
                 for collection in collections:
-                    print(collection['collectionName'])
+
+                    collection_string = (collection['collectionName'][:13] + '...') if \
+                        len(collection['collectionName']) > 13 else (collection['collectionName'])
+                    movie_count = (count_movies_collection(collection['collectionName'], user['userId']))
+                    runtime_sum = 0
+                    for movie in display_collection_movies(collection['collectionName'], user['userId']):
+                        runtime_sum += movie['length']
+                    print(f"{collection_string:>16}{str(movie_count):>16}{str(runtime_sum):>24}")
             case 'WATCH':
                 # get collection name
                 name = input('Enter the collection you would like to watch')
