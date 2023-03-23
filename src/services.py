@@ -11,6 +11,69 @@ MOVIE_SYNTAX = ('movieId', 'mpaa', 'title', 'length')
 WATCHING_SYNTAX = ('watchtime', 'userId', 'movieId')
 
 
+SELECT_CLAUSE = """
+    SELECT
+        m."movieId",
+        m.title,
+        m.mpaa,
+        m.length,
+        STRING_AGG(DISTINCT p.name, ', ') AS actors,
+        STRING_AGG(DISTINCT pd.name, ', ') AS directors,
+        STRING_AGG(DISTINCT EXTRACT(YEAR FROM r."releaseDate")::text, ', ') AS releaseYears,
+        STRING_AGG(rating.rating::text, ', ') AS ratings
+    FROM "Movie" m
+    LEFT JOIN "Acting" a ON m."movieId" = a."movieId"
+    LEFT JOIN "Person" p ON a."personId" = p.personId
+    LEFT JOIN "Directing" d ON m."movieId" = d."movieId"
+    LEFT JOIN "Person" pd ON d."personId" = pd.personId
+    LEFT JOIN "Released" r ON m."movieId" = r."movieId"
+    LEFT JOIN "Rating" rating on m."movieId" = rating."movieId"
+"""
+
+SORT_BY_GENRE = """
+    SELECT
+        m."movieId",
+        m.title,
+        m.mpaa,
+        m.length,
+        STRING_AGG(DISTINCT p.name, ', ') AS actors,
+        STRING_AGG(DISTINCT pd.name, ', ') AS directors,
+        STRING_AGG(DISTINCT EXTRACT(YEAR FROM r."releaseDate")::text, ', ') AS releaseYears,
+        STRING_AGG(rating.rating::text, ', ') AS ratings,
+        STRING_AGG(DISTINCT g."genreName", ', ') AS genres,
+    FROM "Movie" m
+    LEFT JOIN "Acting" a ON m."movieId" = a."movieId"
+    LEFT JOIN "Person" p ON a."personId" = p.personId
+    LEFT JOIN "Directing" d ON m."movieId" = d."movieId"
+    LEFT JOIN "Person" pd ON d."personId" = pd.personId
+    LEFT JOIN "Released" r ON m."movieId" = r."movieId"
+    LEFT JOIN "Rating" rating on m."movieId" = rating."movieId"
+    LEFT JOIN "MovieType" mt ON m."movieId" = mt."movieId"
+    LEFT JOIN "Genre" g ON mt."genreId" = g."genreId"
+"""
+
+SORT_BY_STUDIO = """
+    SELECT
+        m."movieId",
+        m.title,
+        m.mpaa,
+        m.length,
+        STRING_AGG(DISTINCT p.name, ', ') AS actors,
+        STRING_AGG(DISTINCT pd.name, ', ') AS directors,
+        STRING_AGG(DISTINCT EXTRACT(YEAR FROM r."releaseDate")::text, ', ') AS releaseYears,
+        STRING_AGG(rating.rating::text, ', ') AS ratings,
+        STRING_AGG(DISTINCT s."studioName", ', ') AS producers,
+    FROM "Movie" m
+    LEFT JOIN "Acting" a ON m."movieId" = a."movieId"
+    LEFT JOIN "Person" p ON a."personId" = p.personId
+    LEFT JOIN "Directing" d ON m."movieId" = d."movieId"
+    LEFT JOIN "Person" pd ON d."personId" = pd.personId
+    LEFT JOIN "Released" r ON m."movieId" = r."movieId"
+    LEFT JOIN "Rating" rating on m."movieId" = rating."movieId"
+    LEFT JOIN "Producing" producing ON m."movieId" = producing."movieId"
+    LEFT JOIN "Studio" s ON producing."studioId" = s."studioId"
+"""
+
 def convert_tuple(tuple, syntax):
     return {syntax[i]: tuple[i] for i, _ in enumerate(tuple)}
 
@@ -21,8 +84,8 @@ def is_a_user(user_email):
         return False
     return True
 
-
 # user = None
+
 def login(email, password, exists):
     """Login a user or create a new one if they don't exist
 
@@ -214,7 +277,8 @@ def delete_collection(collection_name, user_id):
 search_query = None
 
 
-def search_movies(category=None, term=None):
+def search_movies(movieIds = (), sort_clause = ''):
+
     """Find a list of movies dependent on the category and search term
 
     Users will be able to search for movies by name, release date, cast members, studio, and
@@ -223,30 +287,82 @@ def search_movies(category=None, term=None):
     alphabetically (ascending) by movie’s name and release date.
 
     Args:
-        category (string): column to search [title | year | cast | studio | genre]
-        term (string): term to search for
+       movieIds (list[ids]): list of movie ids to search for
     """
-    if term == None:
-        search_query = """
-            SELECT m.title, m.mpaa, g.genreName, 
-                GROUP_CONCAT(DISTINCT p.name SEPARATOR ', ') AS actors, 
-                GROUP_CONCAT(DISTINCT pd.name SEPARATOR ', ') AS directors, 
-                GROUP_CONCAT(DISTINCT YEAR(r.releaseDate) SEPARATOR ', ') AS releaseYears 
-            FROM Movie m 
-            LEFT JOIN MovieType mt ON m.movieId = mt.movieId 
-            LEFT JOIN Genre g ON mt.genreId = g.genreId 
-            LEFT JOIN Acting a ON m.movieId = a.movieId 
-            LEFT JOIN Person p ON a.personId = p.personId 
-            LEFT JOIN Directing d ON m.movieId = d.movieId 
-            LEFT JOIN Person pd ON d.personId = pd.personId 
-            LEFT JOIN Released r ON m.movieId = r.movieId 
-            GROUP BY m.title, m.mpaa, g.genreName
-        """
-        return execute_query_all()
-    pass
+    if sort_clause != '' and sort_clause[0] == 'genre':
+        select_clause = SORT_BY_GENRE
+    elif sort_clause != '' and sort_clause[0] == 'studio':
+        select_clause = SORT_BY_STUDIO
+    else:
+        select_clause = SELECT_CLAUSE
+
+    group_clause = 'GROUP BY m.title, m.mpaa, m.length, m."movieId"'
+    where_clause = 'WHERE m."movieId" IN %s' if movieIds else None
+    order_by = 'ORDER BY m.title, releaseYears' if sort_clause == '' else sort_clause[1]
+    if where_clause == None:
+        search_query = '{} {} {}'.format(select_clause, group_clause, order_by)
+        return execute_query_all(search_query)
+    else:
+        search_query = '{} {} {} {}'.format(select_clause, where_clause, group_clause, order_by)
+        return execute_query_all(search_query, (movieIds, ))
 
 
-def sort_movies(sort_by, is_asc):
+def search_movies_by_term(category, term):
+    """Search for movies by term. Returns list of movieIds
+    
+        Args:
+            category (string): category to search on
+            term (string): term to search for
+    """
+    match category.lower():
+        case 'title':
+            query = 'SELECT "movieId" FROM "Movie" m WHERE m.title ILIKE %s'
+        case 'year':
+            query = """
+                SELECT
+                    m."movieId"
+                FROM "Movie" m
+                LEFT JOIN "Released" r ON m."movieId" = r."movieId"
+                WHERE EXTRACT(YEAR FROM r."releaseDate")::text ILIKE %s
+            """
+        case 'cast':
+            query = """
+                SELECT
+                    m."movieId"
+                FROM "Movie" m
+                LEFT JOIN "Acting" a ON m."movieId" = a."movieId"
+                LEFT JOIN "Person" p ON a."personId" = p.personId
+                WHERE p.name ILIKE %s
+            """
+        case 'studio':
+            query = """
+                SELECT
+                    m."movieId"
+                FROM "Movie" m
+                LEFT JOIN "Producing" producing ON m."movieId" = producing."movieId"
+                LEFT JOIN "Studio" s ON producing."studioId" = s."studioId"
+                WHERE s."studioName" ILIKE %s
+            """
+        case 'genre':
+            query = """
+                SELECT
+                    m."movieId"
+                FROM "Movie" m
+                LEFT JOIN "MovieType" mt ON m."movieId" = mt."movieId"
+                LEFT JOIN "Genre" g ON mt."genreId" = g."genreId"
+                WHERE g."genreName" ILIKE %s
+            """
+        case _:
+            print('Invalid category to search on. Try again')
+            return None
+    data = ('%{}%'.format(term), )
+    results = execute_query_all(query, data)
+    movieIds = tuple([movie[0] for movie in results])
+    return movieIds
+
+
+
+def get_sort_movies_clause(sort_by, is_asc):
     """Adds a sort clause to the last executed query
 
     Users can sort by: movie name, studio, genre, and released year. Results can be as-
@@ -257,21 +373,19 @@ def sort_movies(sort_by, is_asc):
         is_asc (bool): true if ASC
     """
     direction = 'ASC' if is_asc else 'DESC';
-    if search_query != None:
-        match sort_by.lower():
-            case 'title':
-                sort_query = "ORDER BY title {}".format(direction)
-            case 'year':
-                sort_query = "ORDER BY title {}".format(direction)
-            case 'studio':
-                sort_query = "ORDER BY title {}".format(direction)
-            case 'genre':
-                sort_query = "ORDER BY title {}".format(direction)
-            case _:
-                sort_query = "ORDER BY title ASC"
-        final_query = '{} {}'.format(search_query, sort_query)
-        return execute_query_all(final_query)
-
+    match sort_by.lower():
+        case 'title':
+            sort_query = "ORDER BY m.title {}".format(direction)
+        case 'year':
+            sort_query = "ORDER BY releaseYears {}".format(direction)
+        case 'studio':
+            sort_query = "ORDER BY producers {}".format(direction)
+        case 'genre':
+            sort_query = "ORDER BY genres {}".format(direction)
+        case _:
+            print('Invalid sort by option. Try again!')
+            return None
+    return (sort_by.lower(), sort_query)
 
 def rate_movie(movieId, rating, user_id):
     """Rate a movie
@@ -282,8 +396,7 @@ def rate_movie(movieId, rating, user_id):
         movieId (string): ID of movie
         rating (number): 1-5 rating
     """
-    old_rating = execute_query_one(
-        'SELECT "movieId", "userId" FROM "Rating" WHERE movieId = %s AND userId = %s LIMIT 1', (movieId, user_id))
+    old_rating = execute_query_one('SELECT "movieId", "userId" FROM "Rating" WHERE "movieId" = %s AND "userId" = %s LIMIT 1', (movieId, user_id))
     if old_rating == None:
         insert_or_update('INSERT INTO "Rating" (rating, "movieId", "userId") VALUES (%s, %s, %s)',
                          (rating, movieId, user_id))
@@ -316,19 +429,23 @@ def search_friends(userEmail):
     Args:
         userEmail (string): email to find
     """
-    return execute_query_all('SELECT * FROM "User" WHERE email = %s', (userEmail,))
+
+    if userEmail == None:
+            return execute_query_all('SELECT * FROM "User"')
+    return execute_query_all('SELECT * FROM "User" WHERE email = %s;', (userEmail, ))
 
 
-def add_friend(userId):
+def add_friend(friend_user_id, userId):
     """Users can follow a friend
 
     Args:
         userId (string): id of user
     """
-    insert_or_update('INSERT INTO "Following" (follower, followee) VALUES (%s, %s)', (userId, userId))
+    insert_or_update(
+        'INSERT INTO "Following" (follower, followee) VALUES (%s, %s);', (userId, friend_user_id))
 
 
-def remove_friend(userId):
+def remove_friend(friend_user_id, userId):
     """Remove a friend
 
     The application must also allow an user to unfollow a friend
@@ -336,4 +453,6 @@ def remove_friend(userId):
     Args:
         userId (string): user id
     """
-    insert_or_update('DELETE FROM "Following" WHERE follower = %s AND followee = %s)', (userId, userId))
+    insert_or_update(
+        'DELETE FROM "Following" WHERE follower = %s AND followee = %s;', (userId, friend_user_id))
+

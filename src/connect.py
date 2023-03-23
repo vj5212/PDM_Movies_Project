@@ -10,7 +10,7 @@ username = os.getenv("CS_USER")
 password = os.getenv("CS_PASS")
 dbName = "p320_34"
 
-def execute_query_one(exe_string, data):
+def execute_query_one(exe_string, data=None):
     try:
         with SSHTunnelForwarder(('starbug.cs.rit.edu', 22),
                                 ssh_username=username,
@@ -38,7 +38,7 @@ def execute_query_one(exe_string, data):
         conn.close()
 
 
-def execute_query_all(exe_string, data):
+def execute_query_all(exe_string, data=None):
     try:
         with SSHTunnelForwarder(('starbug.cs.rit.edu', 22),
                                 ssh_username=username,
@@ -65,7 +65,7 @@ def execute_query_all(exe_string, data):
         conn.close()
 
 
-def insert_or_update(exe_string, data):
+def insert_or_update(exe_string, data=None):
     try:
         with SSHTunnelForwarder(('starbug.cs.rit.edu', 22),
                                 ssh_username=username,
