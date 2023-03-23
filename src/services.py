@@ -1,27 +1,28 @@
 from connect import *
 from datetime import datetime
 
-
 USER_SYNTAX = ('userId', 'firstName', 'lastName', 'creationDate', 'lastAccessDate', 'email',
                'password', 'username')
 
 COLLECTION_SYNTAX = ('collectionName', 'userId')
 
-MOVIE_SYNTAX = ('movieId','mpaa','title','length')
+MOVIE_SYNTAX = ('movieId', 'mpaa', 'title', 'length')
 
 WATCHING_SYNTAX = ('watchtime', 'userId', 'movieId')
+
 
 def convert_tuple(tuple, syntax):
     return {syntax[i]: tuple[i] for i, _ in enumerate(tuple)}
 
 
 def is_a_user(user_email):
-    user = execute_query_one('SELECT * FROM "User" WHERE email = %s;', (user_email, ))
+    user = execute_query_one('SELECT * FROM "User" WHERE email = %s;', (user_email,))
     if user == None:
         return False
     return True
 
-#user = None
+
+# user = None
 def login(email, password, exists):
     """Login a user or create a new one if they don't exist
 
@@ -47,6 +48,7 @@ def login(email, password, exists):
         insert_or_update('UPDATE "User" SET "lastAccessDate" = %s WHERE email = %s;', (today, email))
     return convert_tuple(user, USER_SYNTAX)
 
+
 def is_a_collection(name, user_id):
     """Checks if a collection of title 'name' exists for a user
 
@@ -54,22 +56,28 @@ def is_a_collection(name, user_id):
         name (string): name of collection
         user_id (int): id of user
     """
-    query = execute_query_one('SELECT * FROM "Collection" WHERE "collectionName" = %s AND "userId" = %s;', (name, user_id))
+    query = execute_query_one('SELECT * FROM "Collection" WHERE "collectionName" = %s AND "userId" = %s;',
+                              (name, user_id))
     if query == None:
         return False
     return True
 
-def movie_in_collection(name,movie_id, user_id):
+
+def movie_in_collection(name, movie_id, user_id):
     """Checks if a collection of title 'name' exists for a user
 
     Args:
         name (string): name of collection
         user_id (int): id of user
     """
-    query = execute_query_one('SELECT * FROM "CollectionItem" WHERE "collectionName" = %s AND "movieId"=%s AND "userId" = %s;', (name, movie_id,user_id))
+    query = execute_query_one(
+        'SELECT * FROM "CollectionItem" WHERE "collectionName" = %s AND "movieId"=%s AND "userId" = %s;',
+        (name, movie_id, user_id))
     if query == None:
         return False
     return True
+
+
 def create_user_collection(name, user_id):
     """Creates a new collection with title 'name' for a user
 
@@ -81,63 +89,69 @@ def create_user_collection(name, user_id):
     insert_or_update(
         'INSERT INTO "Collection" ("collectionName", "userId") VALUES (%s, %s);', (name, user_id))
 
+
 def display_collections(user_id):
     """Displays list of collections for a user
     Args:
         user_id (int): id of user
     """
-    collections = execute_query_all('SELECT c."collectionName", COUNT(m."movieId"), SUM(m."length") FROM "CollectionItem" as '
-                              'c INNER JOIN "Movie" m on c."movieId" = m."movieId" WHERE "userId" = %s '
-                              'GROUP BY c."collectionName";', (user_id,))
+    collections = execute_query_all(
+        'SELECT c."collectionName", COUNT(m."movieId"), SUM(m."length") FROM "CollectionItem" as '
+        'c INNER JOIN "Movie" m on c."movieId" = m."movieId" WHERE "userId" = %s '
+        'GROUP BY c."collectionName";', (user_id,))
     return collections
 
-def count_movies_collection(collection_name, user_id ):
+
+def count_movies_collection(collection_name, user_id):
     num_movies = execute_query_one('SELECT COUNT("movieId") FROM "CollectionItem" WHERE "userId" = %s AND '
                                    '"collectionName" = %s;', (user_id, collection_name))
     return num_movies[0]
 
 
-def list_collections(Collection_Name,user_id):
-    collections = execute_query_all('SELECT * FROM "CollectionItem" ORDER BY ASC WHERE "CollectionName"=%s AND  "userId"=%s; ', (Collection_Name,user_id,))
+def list_collections(Collection_Name, user_id):
+    collections = execute_query_all(
+        'SELECT * FROM "CollectionItem" ORDER BY ASC WHERE "CollectionName"=%s AND  "userId"=%s; ',
+        (Collection_Name, user_id,))
     print(collections)
+
 
 def display_all_movies():
     """Displays all the movies in the database
      Args:
      """
-    movies = execute_query_all('SELECT * FROM "Movie"',(""))
+    movies = execute_query_all('SELECT * FROM "Movie"', (""))
     movie_list = []
-    #print(collections)
+    # print(collections)
     for movie in movies:
-        new_list=[]
+        new_list = []
         new_list.append(movie[0])
         new_list.append(movie[2])
         movie_list.append(new_list)
-    #print(movie_list)
+    # print(movie_list)
     return movie_list
+
 
 def display_one_movies(movie_id):
     """Displays the movie name with the id
      Args:
          movie_id: id of the movie
      """
-    movie = execute_query_all('SELECT * FROM "Movie" WHERE "movieId"=%s;', (movie_id, ))
+    movie = execute_query_all('SELECT * FROM "Movie" WHERE "movieId"=%s;', (movie_id,))
     return convert_tuple(movie[0], MOVIE_SYNTAX)
 
 
-
-def display_collection_movies(collection_name,user_id):
+def display_collection_movies(collection_name, user_id):
     """displays all the movies in a user collection
         Args:
             collection_name(str): name of the collection
             user_id (int): id of user
         """
-    movie_id_tuple = execute_query_all('SELECT "movieId" FROM "CollectionItem" WHERE "collectionName"=%s and "userId"=%s;', (collection_name,user_id))
+    movie_id_tuple = execute_query_all(
+        'SELECT "movieId" FROM "CollectionItem" WHERE "collectionName"=%s and "userId"=%s;', (collection_name, user_id))
     movie_list = []
     for movie_id in movie_id_tuple:
         movie_list.append(display_one_movies(movie_id))
     return movie_list
-
 
 
 def movie_exists(movie_id):
@@ -151,7 +165,8 @@ def movie_exists(movie_id):
         return False
     return True
 
-def add_to_collection(collection_name, movie_id,user_id):
+
+def add_to_collection(collection_name, movie_id, user_id):
     """adds a movie to a user's collection
     Args:
         movie_id (int): id of the movie
@@ -160,33 +175,34 @@ def add_to_collection(collection_name, movie_id,user_id):
     """
     print("adding")
     insert_or_update('INSERT INTO "CollectionItem" ("collectionName", "movieId","userId") VALUES (%s, %s,%s);',
-                     (collection_name,movie_id, user_id))
+                     (collection_name, movie_id, user_id))
 
 
-def remove_from_collection(collection_name, movie_id,user_id):
+def remove_from_collection(collection_name, movie_id, user_id):
     """removes a movie to a user's collection
     Args:
         movie_id (int): id of the movie
         collection_name(str): name of the collection
         user_id (int): id of user
     """
-    insert_or_update('DELETE FROM "CollectionItem" WHERE "collectionName"=%s and "movieId"=%s and "userId"=%s', (collection_name,movie_id, user_id))
+    insert_or_update('DELETE FROM "CollectionItem" WHERE "collectionName"=%s and "movieId"=%s and "userId"=%s',
+                     (collection_name, movie_id, user_id))
 
 
-
-def rename_collection(old_collection_name,new_collection_name, user_id):
+def rename_collection(old_collection_name, new_collection_name, user_id):
     """rename a collection of a user
     Args:
         old_collection_name(str): name of the collection
         new_collection_name(str): name of the new collection
         user_id (int): id of user
     """
-    #insert_or_update('UPDATE "CollectionItem" SET "collectionName" = %s WHERE "collectionName" = %s and "userId"=%s;', (new_collection_name, old_collection_name,user_id))
+    # insert_or_update('UPDATE "CollectionItem" SET "collectionName" = %s WHERE "collectionName" = %s and "userId"=%s;', (new_collection_name, old_collection_name,user_id))
 
-    insert_or_update('UPDATE "Collection" SET "collectionName" = %s WHERE "collectionName" = %s and "userId"=%s;', (new_collection_name, old_collection_name,user_id))
+    insert_or_update('UPDATE "Collection" SET "collectionName" = %s WHERE "collectionName" = %s and "userId"=%s;',
+                     (new_collection_name, old_collection_name, user_id))
 
 
-def delete_collection(collection_name,user_id):
+def delete_collection(collection_name, user_id):
     """deletes a collection of a user
      Args:
          collection_name(str): name of the collection
@@ -195,9 +211,9 @@ def delete_collection(collection_name,user_id):
     insert_or_update('DELETE FROM "Collection" WHERE "collectionName"=%s and "userId"=%s', (collection_name, user_id))
 
 
-
-
 search_query = None
+
+
 def search_movies(category=None, term=None):
     """Find a list of movies dependent on the category and search term
 
@@ -266,11 +282,14 @@ def rate_movie(movieId, rating, user_id):
         movieId (string): ID of movie
         rating (number): 1-5 rating
     """
-    old_rating = execute_query_one('SELECT "movieId", "userId" FROM "Rating" WHERE movieId = %s AND userId = %s LIMIT 1', (movieId, user_id))
+    old_rating = execute_query_one(
+        'SELECT "movieId", "userId" FROM "Rating" WHERE movieId = %s AND userId = %s LIMIT 1', (movieId, user_id))
     if old_rating == None:
-        insert_or_update('INSERT INTO "Rating" (rating, "movieId", "userId") VALUES (%s, %s, %s)', (rating, movieId, user_id))
+        insert_or_update('INSERT INTO "Rating" (rating, "movieId", "userId") VALUES (%s, %s, %s)',
+                         (rating, movieId, user_id))
     else:
-        insert_or_update('UPDATE "Rating" SET rating = %s WHERE movieId = %s AND userId = %s', (rating, movieId, user_id))
+        insert_or_update('UPDATE "Rating" SET rating = %s WHERE movieId = %s AND userId = %s',
+                         (rating, movieId, user_id))
 
 
 def watch_movie(movieId, user_id):
@@ -280,11 +299,13 @@ def watch_movie(movieId, user_id):
         movieId (string): ID of movie
     """
     today = datetime.now()
-    insert_or_update('INSERT INTO "Watching" ("movieId", "userId", watchtime) VALUES (%s, %s, %s)', (movieId, user_id, today))
+    insert_or_update('INSERT INTO "Watching" ("movieId", "userId", watchtime) VALUES (%s, %s, %s)',
+                     (movieId, user_id, today))
 
 
 def watch_collection(collection_name, user_id):
-    movies = execute_query_all('SELECT "movieId" FROM "CollectionItem" WHERE "collectionName"=%s and "userId"=%s;', (collection_name,user_id))
+    movies = execute_query_all('SELECT "movieId" FROM "CollectionItem" WHERE "collectionName"=%s and "userId"=%s;',
+                               (collection_name, user_id))
     for movie in movies:
         watch_movie(movie[0], user_id)
 
@@ -295,7 +316,7 @@ def search_friends(userEmail):
     Args:
         userEmail (string): email to find
     """
-    return execute_query_all('SELECT * FROM "User" WHERE email = %s', (userEmail, ))
+    return execute_query_all('SELECT * FROM "User" WHERE email = %s', (userEmail,))
 
 
 def add_friend(userId):
@@ -316,5 +337,3 @@ def remove_friend(userId):
         userId (string): user id
     """
     insert_or_update('DELETE FROM "Following" WHERE follower = %s AND followee = %s)', (userId, userId))
-
-

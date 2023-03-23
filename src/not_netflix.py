@@ -2,6 +2,7 @@
 from services import *
 import math
 
+
 def main():
     global user
     user = welcome()
@@ -70,28 +71,7 @@ def collection_commands():
         args = selection.split(' ')
         match args[0].upper():
             case 'DISPLAY':
-                collection_name_header = "Collection Name"
-                movie_count_header = "# of Movies"
-                runtime_sum_header = "Length of Movies"
-                print(f"{collection_name_header:<50}{movie_count_header:<16}{runtime_sum_header:<24}")
-                collections = display_collections(user['userId'])
-                for collection in collections:
-                    """
-                    collection[0] = Collection Name
-                    collection[1] = # of Movies
-                    collection[2] = Length of Movies
-                    """
-                    hours_string = "hours"
-                    minutes_string = "minutes"
-                    total_minutes = collection[2]*60
-                    hours = math.floor(collection[2])
-                    remainder_minutes = math.floor(total_minutes - hours * 60)
-                    if hours == 1:
-                        hours_string = "hour"
-                    if remainder_minutes == 1:
-                        minutes_string = "minute"
-                    print(f"{collection[0]:<50}{collection[1]:<16}{hours:<6}"
-                          f"{hours_string:<6}{remainder_minutes:<4}{minutes_string}")
+                display_user_collection()
             case 'WATCH':
                 # get collection name
                 name = input('Enter the collection you would like to watch')
@@ -105,13 +85,11 @@ def collection_commands():
                 if not is_a_collection(name, user['userId']):
                     create_user_collection(name, user['userId'])
                     # display new list of collections
-                    collections = display_collections(user['userId'])
-                    for collection in collections:
-                        print(collection['collectionName'])
-
+                    display_user_collection()
                 else:
                     print('Collection already exists')
             case 'MODIFY':
+                display_user_collection()
                 # ask for collection name to modify
                 name = input('Enter a collection to modify: ')
                 if is_a_collection(name, user['userId']):
@@ -128,6 +106,9 @@ def collection_commands():
 
 
 def movie_commands(is_collection=False, collection_name=None):
+    ### Remove asking for collection_name again ###
+    ### Change references to collectionName ###
+    ### Fill necessary arguments ###
     while True:
         if is_collection:
             print('## MENU ## [COLLECTION-MOVIES] ## MOVIES ## FRIENDS ##\n')
@@ -155,6 +136,7 @@ def movie_commands(is_collection=False, collection_name=None):
                     print("Renamed collection from: ", collection_name, " to ", NewcollectionName)
 
             case 'LIST':
+                ### Reformat Output ####
                 if is_collection:
                     for movie in display_collection_movies(collection_name, user['userId']):
                         print(movie)
@@ -232,9 +214,28 @@ def movie_commands(is_collection=False, collection_name=None):
 
 
 def display_user_collection():
+    collection_name_header = "Collection Name"
+    movie_count_header = "# of Movies"
+    runtime_sum_header = "Length of Movies"
+    print(f"{collection_name_header:<50}{movie_count_header:<16}{runtime_sum_header:<24}")
     collections = display_collections(user['userId'])
     for collection in collections:
-        print(collection['collectionName'])
+        """
+        collection[0] = Collection Name
+        collection[1] = # of Movies
+        collection[2] = Length of Movies
+        """
+        hours_string = "hours"
+        minutes_string = "minutes"
+        total_minutes = collection[2] * 60
+        hours = math.floor(collection[2])
+        remainder_minutes = math.floor(total_minutes - hours * 60)
+        if hours == 1:
+            hours_string = "hour"
+        if remainder_minutes == 1:
+            minutes_string = "minute"
+        print(f"{collection[0]:<50}{collection[1]:<16}{hours:<6}"
+              f"{hours_string:<6}{remainder_minutes:<4}{minutes_string}")
 
 
 def friend_commands():
