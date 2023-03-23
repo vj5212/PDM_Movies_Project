@@ -159,9 +159,11 @@ def display_collections(user_id):
         user_id (int): id of user
     """
     collections = execute_query_all(
-        'SELECT c."collectionName", COUNT(m."movieId"), SUM(m."length") FROM "CollectionItem" as '
-        'c INNER JOIN "Movie" m on c."movieId" = m."movieId" WHERE "userId" = %s '
-        'GROUP BY c."collectionName";', (user_id,))
+        'SELECT "collectionName", 0, 0 FROM "Collection" WHERE "userId" = %s GROUP BY "collectionName" UNION '
+        'SELECT c."collectionName", COUNT(m."movieId"), SUM(m."length") FROM "Collection" as '
+        'c INNER JOIN "CollectionItem" col on c."collectionName" = col."collectionName" and c."userId" = col."userId" '
+        'INNER JOIN "Movie" m on col."movieId" = m."movieId" WHERE c."userId" = %s '
+        'GROUP BY c."collectionName";', (user_id, user_id ))
     return collections
 
 
