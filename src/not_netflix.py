@@ -1,6 +1,6 @@
 # Main executable for program. Command line based
 from services import *
-
+import math
 
 def main():
     global user
@@ -73,18 +73,25 @@ def collection_commands():
                 collection_name_header = "Collection Name"
                 movie_count_header = "# of Movies"
                 runtime_sum_header = "Length of Movies"
+                print(f"{collection_name_header:<50}{movie_count_header:<16}{runtime_sum_header:<24}")
                 collections = display_collections(user['userId'])
-                print(f"{collection_name_header:>16}{movie_count_header:>16}{runtime_sum_header:>24}")
-
                 for collection in collections:
-
-                    collection_string = (collection['collectionName'][:13] + '...') if \
-                        len(collection['collectionName']) > 13 else (collection['collectionName'])
-                    movie_count = (count_movies_collection(collection['collectionName'], user['userId']))
-                    runtime_sum = 0
-                    for movie in display_collection_movies(collection['collectionName'], user['userId']):
-                        runtime_sum += movie['length']
-                    print(f"{collection_string:>16}{str(movie_count):>16}{str(runtime_sum):>24}")
+                    """
+                    collection[0] = Collection Name
+                    collection[1] = # of Movies
+                    collection[2] = Length of Movies
+                    """
+                    hours_string = "hours"
+                    minutes_string = "minutes"
+                    total_minutes = collection[2]*60
+                    hours = math.floor(collection[2])
+                    remainder_minutes = math.floor(total_minutes - hours * 60)
+                    if hours == 1:
+                        hours_string = "hour"
+                    if remainder_minutes == 1:
+                        minutes_string = "minute"
+                    print(f"{collection[0]:<50}{collection[1]:<16}{hours:<6}"
+                          f"{hours_string:<6}{remainder_minutes:<4}{minutes_string}")
             case 'WATCH':
                 # get collection name
                 name = input('Enter the collection you would like to watch')

@@ -59,9 +59,6 @@ def is_a_collection(name, user_id):
         return False
     return True
 
-def display_user_collections(user_id):
-    query = execute_query_all('SELECT ')
-
 def movie_in_collection(name,movie_id, user_id):
     """Checks if a collection of title 'name' exists for a user
 
@@ -89,11 +86,10 @@ def display_collections(user_id):
     Args:
         user_id (int): id of user
     """
-    collections = execute_query_all('SELECT "collectionName", COUNT("movieId"), SUM("length") FROM "Collection" WHERE "userId"=%s;', (user_id, ))
-    collection_list = []
-    for collection in collections:
-        collection_list.append(convert_tuple(collection, COLLECTION_SYNTAX))
-    return collection_list
+    collections = execute_query_all('SELECT c."collectionName", COUNT(m."movieId"), SUM(m."length") FROM "CollectionItem" as '
+                              'c INNER JOIN "Movie" m on c."movieId" = m."movieId" WHERE "userId" = %s '
+                              'GROUP BY c."collectionName";', (user_id,))
+    return collections
 
 def count_movies_collection(collection_name, user_id ):
     num_movies = execute_query_one('SELECT COUNT("movieId") FROM "CollectionItem" WHERE "userId" = %s AND '
