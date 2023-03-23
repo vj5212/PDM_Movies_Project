@@ -150,7 +150,7 @@ def movie_commands(is_collection=False, collection_name=None):
                         if i == 11:
                             break
 
-                    movie_id = input("Which of the movie would you like to add(pick number) ?")
+                    movie_id = input("Which movie would you like to add(pick number) ?")
 
                     if movie_exists(movie_id):
 
@@ -167,7 +167,7 @@ def movie_commands(is_collection=False, collection_name=None):
                     for movie in movies:
                         print(movie[0], ": ", movie[1])
 
-                    movie_id = input("Which of the movie would you like to remove (pick number)? ")
+                    movie_id = input("Which movie would you like to remove (pick number)? ")
 
                     if movie_in_collection(collection_name, int(movie_id), user['userId']):
                         remove_from_collection(collection_name, int(movie_id), user['userId'])
