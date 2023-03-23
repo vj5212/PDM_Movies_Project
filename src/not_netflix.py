@@ -336,7 +336,7 @@ def __movie_results_helper__(results):
         print('Movie: ' + movie[1])
         print('MPAA: ' + movie[2])
         hours = math.floor(movie[3])
-        minutes = (movie[3] * 60) % 60
+        minutes = round((movie[3] * 60) % 60)
         print('Runtime: {}h {}m'.format(str(hours), str(minutes)))
         print('Directors: ' +
                 movie[5] if movie[5] != None else 'Directors: No directors found')
