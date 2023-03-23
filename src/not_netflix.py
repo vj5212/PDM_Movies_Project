@@ -203,14 +203,14 @@ def movie_commands(is_collection=False, collection_name=None):
                     results = search_movies()
                 else:
                     movieIds = search_movies_by_term(category, term)
-                    results = search_movies(movieIds)
+                    results = search_movies(movieIds) if movieIds else []
 
                 __movie_results_helper__(results)
             case 'SORT':
                 sort_category = args[1] if len(args) > 1 else None
                 direction = args[2] if len(args) > 2 else None
                 print('\nsorting results...')
-                movieIds = search_movies_by_term(category, term)
+                movieIds = search_movies_by_term(category, term) if category != None else []
                 results = search_movies(movieIds, get_sort_movies_clause(sort_category, direction.upper() == 'ASC'))
                 __movie_results_helper__(results)
             case 'HELP':

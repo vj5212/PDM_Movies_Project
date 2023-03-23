@@ -40,7 +40,7 @@ SORT_BY_GENRE = """
         STRING_AGG(DISTINCT pd.name, ', ') AS directors,
         STRING_AGG(DISTINCT EXTRACT(YEAR FROM r."releaseDate")::text, ', ') AS releaseYears,
         STRING_AGG(rating.rating::text, ', ') AS ratings,
-        STRING_AGG(DISTINCT g."genreName", ', ') AS genres,
+        STRING_AGG(DISTINCT g."genreName", ', ') AS genres
     FROM "Movie" m
     LEFT JOIN "Acting" a ON m."movieId" = a."movieId"
     LEFT JOIN "Person" p ON a."personId" = p.personId
@@ -62,7 +62,7 @@ SORT_BY_STUDIO = """
         STRING_AGG(DISTINCT pd.name, ', ') AS directors,
         STRING_AGG(DISTINCT EXTRACT(YEAR FROM r."releaseDate")::text, ', ') AS releaseYears,
         STRING_AGG(rating.rating::text, ', ') AS ratings,
-        STRING_AGG(DISTINCT s."studioName", ', ') AS producers,
+        STRING_AGG(DISTINCT s."studioName", ', ') AS producers
     FROM "Movie" m
     LEFT JOIN "Acting" a ON m."movieId" = a."movieId"
     LEFT JOIN "Person" p ON a."personId" = p.personId
