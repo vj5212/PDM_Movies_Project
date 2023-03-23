@@ -106,9 +106,6 @@ def collection_commands():
 
 
 def movie_commands(is_collection=False, collection_name=None):
-    ### Remove asking for collection_name again ###
-    ### Change references to collectionName ###
-    ### Fill necessary arguments ###
     while True:
         if is_collection:
             print('## MENU ## [COLLECTION-MOVIES] ## MOVIES ## FRIENDS ##\n')
@@ -155,8 +152,8 @@ def movie_commands(is_collection=False, collection_name=None):
 
                     if movie_exists(movie_id):
 
-                        if not movie_in_collection(collectionName, int(movie_id), user['userId']):
-                            add_to_collection(collectionName, int(movie_id), user['userId'])
+                        if not movie_in_collection(collection_name, int(movie_id), user['userId']):
+                            add_to_collection(collection_name, int(movie_id), user['userId'])
                         else:
                             print("Movie is already in the collection")
                     else:
@@ -164,38 +161,22 @@ def movie_commands(is_collection=False, collection_name=None):
 
             case 'REMOVE':
                 if is_collection:
-                    display_user_collection()
-
-                    collectionName = input("Which of the collection would you like to remove from?")
-
-                    if is_a_collection(collectionName, user['userId']) == False:
-                        print("that is not a correct collection name")
-                        # movie_commands(True)
-                        break
-                    movies = display_collection_movies(collectionName, user['userId'])
+                    movies = display_collection_movies(collection_name, user['userId'])
                     for movie in movies:
                         print(movie[0], ": ", movie[1])
 
                     movie_id = input("Which of the movie would you like to remove (pick number)? ")
 
-                    if movie_in_collection(collectionName, int(movie_id), user['userId']):
-                        remove_from_collection(collectionName, int(movie_id), user['userId'])
+                    if movie_in_collection(collection_name, int(movie_id), user['userId']):
+                        remove_from_collection(collection_name, int(movie_id), user['userId'])
                         print("REMOVED!!")
                     else:
                         print("Movie id you entered is not in the collection")
 
             case 'DELETE':
                 if is_collection:
-                    display_user_collection()
-                    collectionName = input("Which Collection would you like to delete? ")
-
-                    if is_a_collection(collectionName, user['userId']) == False:
-                        print("that is not a correct collection name")
-                        # movie_commands(True)
-                        break
-
-                    delete_collection(collectionName, user['userId'])
-                    print("Deleted ", collectionName)
+                    delete_collection(collection_name, user['userId'])
+                    print("Deleted ", collection_name)
 
             case 'WATCH':
                 watch_movie()
