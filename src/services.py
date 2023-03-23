@@ -159,11 +159,14 @@ def display_collections(user_id):
         user_id (int): id of user
     """
     collections = execute_query_all(
-        'SELECT "collectionName", 0, 0 FROM "Collection" WHERE "userId" = %s GROUP BY "collectionName" UNION '
-        'SELECT c."collectionName", COUNT(m."movieId"), SUM(m."length") FROM "Collection" as '
-        'c INNER JOIN "CollectionItem" col on c."collectionName" = col."collectionName" and c."userId" = col."userId" '
-        'INNER JOIN "Movie" m on col."movieId" = m."movieId" WHERE c."userId" = %s '
-        'GROUP BY c."collectionName";', (user_id, user_id ))
+        'SELECT c1."collectionName", 0 as count, 0 as sum FROM "Collection" as c1 WHERE "userId" = %s and '
+        'c1."collectionName" NOT IN (SELECT c."collectionName" FROM "Collection" as c INNER JOIN "CollectionItem" col '
+        'on c."collectionName" = col."collectionName" and c."userId" = col."userId" INNER JOIN "Movie" m on '
+        'col."movieId" = m."movieId" WHERE c."userId" = %s GROUP BY c."collectionName") UNION'
+        ' (SELECT c."collectionName", COUNT(m."movieId"), SUM(m."length") FROM "Collection" as c INNER JOIN '
+        '"CollectionItem" col on c."collectionName" = col."collectionName" and c."userId" = col."userId" INNER JOIN '
+        '"Movie" m on col."movieId" = m."movieId" WHERE c."userId" = %s GROUP BY c."collectionName")',
+        (user_id, user_id, user_id ))
     return collections
 
 
