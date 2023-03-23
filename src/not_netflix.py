@@ -136,10 +136,9 @@ def movie_commands(is_collection=False, collection_name=None):
                     print("Renamed collection from: ", collection_name, " to ", NewcollectionName)
 
             case 'LIST':
-                ### Reformat Output ####
                 if is_collection:
-                    for movie in display_collection_movies(collection_name, user['userId']):
-                        print(movie)
+                    results = display_collection_movies(collection_name, user['userId'])
+                    __movie_results_helper__(results)
 
             case 'ADD':
                 if is_collection:

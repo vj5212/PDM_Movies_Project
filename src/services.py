@@ -209,12 +209,11 @@ def display_collection_movies(collection_name, user_id):
             collection_name(str): name of the collection
             user_id (int): id of user
         """
-    movie_id_tuple = execute_query_all(
+    movie_id_list = execute_query_all(
         'SELECT "movieId" FROM "CollectionItem" WHERE "collectionName"=%s and "userId"=%s;', (collection_name, user_id))
-    movie_list = []
-    for movie_id in movie_id_tuple:
-        movie_list.append(display_one_movies(movie_id))
-    return movie_list
+    movie_id_tuple = tuple([movie[0] for movie in movie_id_list])
+    return search_movies(movie_id_tuple)
+
 
 
 def movie_exists(movie_id):
