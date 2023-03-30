@@ -9,10 +9,11 @@ def main():
 
     print('Welcome {} to NotNetflix!\n'.format(user['firstName']))
     while True:
-        print('## [MENU] ## COLLECTIONS ## MOVIES ## FRIENDS ##\n')
+        print('## [MENU] ## COLLECTIONS ## MOVIES ## FRIENDS ## PROFILE ##\n')
         print('COLLECTIONS')
         print('MOVIES')
         print('FRIENDS')
+        print('PROFILE')
         print('QUIT')
         category = input("Start with a category: ")
 
@@ -23,6 +24,8 @@ def main():
                 movie_commands()
             case 'FRIENDS':
                 friend_commands()
+            case 'PROFILE':
+                profile_commands()
             case 'QUIT':
                 print('Thank you for using NotNetflix!')
                 break
@@ -54,10 +57,32 @@ def welcome():
         except Exception:
             print('Login failed...Please try again!\n')
 
+def profile_commands():
+    while True:
+        print('## MENU ## COLLECTIONS ## MOVIES ## FRIENDS ## [PROFILE] ##\n')
+        print('VIEW')
+        print('HELP')
+        print('BACK')
+
+        selection = input('Type a command: ')
+        args = selection.split(' ')
+        match args[0].upper():
+            case 'VIEW':
+                # implement view profile
+            case 'HELP':
+                __profile_helper__()
+            case 'BACK':
+                print('Returning to main menu...')
+                break
+            case _:
+                print('Invalid command. Try again!\n\n')
+        input('Press enter to finish.')
+
+
 
 def collection_commands():
     while True:
-        print('## MENU ## [COLLECTIONS] ## MOVIES ## FRIENDS ##\n')
+        print('## MENU ## [COLLECTIONS] ## MOVIES ## FRIENDS ## PROFILE ##\n')
 
         print('DISPLAY')
         print('WATCH')
@@ -111,14 +136,14 @@ def movie_commands(is_collection=False, collection_name=None):
     term = None
     while True:
         if is_collection:
-            print('## MENU ## [COLLECTION-MOVIES] ## MOVIES ## FRIENDS ##\n')
+            print('## MENU ## [COLLECTION-MOVIES] ## MOVIES ## FRIENDS ## PROFILE ##\n')
             print('RENAME')
             print('LIST')
             print('ADD')
             print('REMOVE')
             print('DELETE')
         else:
-            print('## MENU ## COLLECTIONS ## [MOVIES] ## FRIENDS ##\n')
+            print('## MENU ## COLLECTIONS ## [MOVIES] ## FRIENDS ## PROFILE ##\n')
             print('WATCH')
             print('RATE')
         print('SEARCH')
@@ -252,7 +277,7 @@ def display_user_collection():
 
 def friend_commands():
     while True:
-        print('## MENU ## COLLECTIONS ## MOVIES ## [FRIENDS] ##\n')
+        print('## MENU ## COLLECTIONS ## MOVIES ## [FRIENDS] ## PROFILE ##\n')
         print('SEARCH')
         print('ADD')
         print('REMOVE')
@@ -283,6 +308,11 @@ def friend_commands():
                 print('Returning to main menu...')
                 break
         input('Press enter to finish.')
+
+def __profile_helper__():
+    print("""
+        VIEW --criteria: element to list top 10 movies by ('rating', 'plays', or 'both')
+        """)
 
 def __collection_helper__():
     print("""
