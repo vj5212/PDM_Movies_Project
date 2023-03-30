@@ -1,5 +1,7 @@
 from connect import *
 from datetime import datetime
+import hashlib
+
 
 USER_SYNTAX = ('userId', 'firstName', 'lastName', 'creationDate', 'lastAccessDate', 'email',
                'password', 'username')
@@ -102,14 +104,45 @@ def login(email, password, exists):
         first_name = input("What's your first name: ")
         last_name = input("What's your last name: ")
         username = input("Enter a username: ")
+
+        salted = password.encode() + username.encode()
+        password_hashed = hashlib.sha256(salted).hexdigest()
         insert_or_update(
             """INSERT INTO "User" ("firstName","lastName","creationDate","lastAccessDate",email,password,username) VALUES (%s,%s,%s,%s,%s,%s,%s);""",
-            (first_name, last_name, today, today, email, password, username)
+            (first_name, last_name, today, today, email, password_hashed, username)
         )
+
+
+    username = execute_query_one('SELECT "username" FROM "User" WHERE email = %s;', (email,))
+    salted = password.encode() + username[0].encode()
+
+    if not exists:
+        password = password_hashed
+    else:
+        password=hashlib.sha256(salted).hexdigest()
+
+
+
     user = execute_query_one('SELECT * FROM "User" WHERE email = %s AND password = %s;', (email, password))
+
     if user != None and exists:
         insert_or_update('UPDATE "User" SET "lastAccessDate" = %s WHERE email = %s;', (today, email))
     return convert_tuple(user, USER_SYNTAX)
+
+
+def hash_password():
+    """hahses the password for user is the database
+        NEVER RUN IT AGAIN, IT'LL MESS UP THE PASSWORDS
+        """
+    users = execute_query_all('SELECT username,password FROM "User"', (""))
+    for user in users:
+        username=user[0]
+        password=user[1]
+        salted = password.encode()+username.encode()
+        hashed_password = hashlib.sha256(salted).hexdigest()
+        print("updating ",username , " ", password ," to ",hashed_password )
+        insert_or_update('UPDATE "User" SET "password" = %s WHERE "username" = %s;', (hashed_password, username))
+
 
 
 def is_a_collection(name, user_id):
@@ -271,6 +304,7 @@ def rename_collection(old_collection_name, new_collection_name, user_id):
 
 def delete_collection(collection_name, user_id):
     """deletes a collection of a user
+
      Args:
          collection_name(str): name of the collection
          user_id (int): id of user
