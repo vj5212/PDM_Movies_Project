@@ -460,3 +460,127 @@ def remove_friend(friend_user_id, userId):
     insert_or_update(
         'DELETE FROM "Following" WHERE follower = %s AND followee = %s;', (userId, friend_user_id))
 
+
+
+def top_20_last_90():
+    """The top 20 most popular movies in the last 90 days
+    """
+    query =  """
+        SELECT
+            m."movieId",
+            count(watching.watchtime) timesWatched
+        FROM "Movie" m
+        LEFT JOIN "Watching" watching on m."movieId" = watching."movieId"
+        WHERE watching.watchtime < current_date - interval '90' day
+        GROUP BY m."movieId"
+        ORDER BY timesWatched DESC
+        LIMIT 20 
+    """
+    results = execute_query_all(query)
+    movieIds = tuple([movie[0] for movie in results])
+    return movieIds
+
+
+def top_20_friends(user_id):
+    """The top 20 most popular movies among my friends
+    """
+    friendIds = get_friend_ids(user_id)
+    if friendIds != tuple():
+        query = """
+            SELECT
+                m."movieId",
+                count(watching.watchtime) timesWatched
+            FROM "Movie" m
+            LEFT JOIN "Watching" watching on m."movieId" = watching."movieId"
+            WHERE watching.watchtime < current_date - interval '90' day
+                AND watching."userId" IN %s
+            GROUP BY m."movieId"
+            ORDER BY timesWatched DESC
+            LIMIT 20;
+        """
+        results = execute_query_all(query, (friendIds, ))
+        movieIds = tuple([movie[0] for movie in results])
+        return movieIds
+    else:
+        print('No friends. Try finding some.')
+
+
+def top_5_of_month():
+    """The top 5 new releases of the month
+    """
+    query = """
+        SELECT
+            m."movieId",
+            count(watching.watchtime) timesWatched
+        FROM "Movie" m
+        LEFT JOIN "Watching" watching on m."movieId" = watching."movieId"
+        WHERE EXTRACT(YEAR FROM watching.watchtime) = EXTRACT(YEAR From current_date)
+            AND EXTRACT(MONTH FROM watching.watchtime) = EXTRACT(MONTH From current_date)
+        GROUP BY m."movieId"
+        ORDER BY timesWatched DESC
+        LIMIT 5;
+    """
+    results = execute_query_all(query)
+    movieIds = tuple([movie[0] for movie in results])
+    return movieIds
+
+def for_you(user_id):
+    """For you: Recommend movies to watch to based on your play history (e.g. genre,
+    cast member, rating) and the play history of similar users
+
+    Args:
+        user_id (integer): id of user
+    """
+    actors = []
+    ratings = []
+    genres = []
+    user_ids = get_friend_ids(user_id) + (user_id, )
+    foryou_query = """
+        SELECT
+            m."movieId",
+            STRING_AGG(DISTINCT p.name, ', ') AS actors,
+            avg(rating.rating) AS rating,
+            STRING_AGG(DISTINCT g."genreName", ', ') AS genres
+        FROM "Movie" m
+        LEFT JOIN "Acting" a ON m."movieId" = a."movieId"
+        LEFT JOIN "Person" p ON a."personId" = p.personId
+        LEFT JOIN "Rating" rating on m."movieId" = rating."movieId"
+        LEFT JOIN "Watching" watching on m."movieId" = watching."movieId"
+        LEFT JOIN "MovieType" mt ON m."movieId" = mt."movieId"
+        LEFT JOIN "Genre" g ON mt."genreId" = g."genreId"
+        WHERE watching."userId" IN %s
+        GROUP BY m."movieId";
+    """
+    movies = execute_query_all(foryou_query, (user_ids, ))
+    for movie in movies:
+        actors.extend(movie[1].split(', ') if movie[1] else [])
+        genres.extend(movie[3].split(', ') if movie[3] else [])
+        ratings.append(movie[2] if movie[2] else 0)
+    query = """
+        SELECT
+            m."movieId",
+            avg(rating.rating) AS rating
+        FROM "Movie" m
+        LEFT JOIN "Acting" a ON m."movieId" = a."movieId"
+        LEFT JOIN "Person" p ON a."personId" = p.personId
+        LEFT JOIN "Rating" rating on m."movieId" = rating."movieId"
+        LEFT JOIN "Watching" watching on m."movieId" = watching."movieId"
+        LEFT JOIN "MovieType" mt ON m."movieId" = mt."movieId"
+        LEFT JOIN "Genre" g ON mt."genreId" = g."genreId"
+        WHERE p.name = ANY(%s)
+            OR rating.rating >= %s
+            OR g."genreName" = ANY(%s)
+        GROUP BY m."movieId";
+    """
+    filter_rating = round(sum(ratings) / len(ratings))
+    results = execute_query_all(query, (actors, filter_rating, genres))
+    movieIds = tuple([movie[0] for movie in results])
+    return movieIds
+
+
+def get_friend_ids(user_id):
+    friend_query = """
+        SELECT followee FROM "Following" WHERE follower = %s;
+    """
+    friendIds = tuple([user[0] for user in execute_query_all(friend_query, (user_id, ))])
+    return friendIds
