@@ -69,6 +69,7 @@ def profile_commands():
         args = selection.split(' ')
         match args[0].upper():
             case 'VIEW':
+                profile_stats(user['userId'])
                 # implement view profile
             case 'HELP':
                 __profile_helper__()

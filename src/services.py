@@ -494,3 +494,10 @@ def remove_friend(friend_user_id, userId):
     insert_or_update(
         'DELETE FROM "Following" WHERE follower = %s AND followee = %s;', (userId, friend_user_id))
 
+def profile_stats(userId):
+    stats_tuple = execute_query_all(
+        'SELECT COUNT("followee") from "Following" where follower = %s UNION ALL'
+        '(SELECT COUNT("follower") from "Following" where followee = %s) UNION ALL'
+        '(SELECT COUNT("collectionName") from "Collection" where "userId" = %s);', (userId, userId, userId)
+    )
+   # print(stats_tuple)
