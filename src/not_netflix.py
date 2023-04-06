@@ -51,6 +51,7 @@ def welcome():
             password = input('Enter your password to login: ')
 
         try:
+
             user = login(email, password, is_user)
             print('Login successful!\n')
             return user
@@ -273,6 +274,7 @@ def display_user_collection():
             minutes_string = "minute"
         print(f"{collection[0]:<50}{collection[1]:<16}{hours:<6}"
               f"{hours_string:<6}{remainder_minutes:<4}{minutes_string}")
+
 
 
 def friend_commands():
