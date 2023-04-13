@@ -120,6 +120,7 @@ def movie_commands(is_collection=False, collection_name=None):
             print('DELETE')
         else:
             print('## MENU ## COLLECTIONS ## [MOVIES] ## FRIENDS ##\n')
+            print('RECS')
             print('WATCH')
             print('RATE')
         print('SEARCH')
@@ -180,7 +181,8 @@ def movie_commands(is_collection=False, collection_name=None):
                 if is_collection:
                     delete_collection(collection_name, user['userId'])
                     print("Deleted ", collection_name)
-
+            case 'RECS':
+                rec_commands()
             case 'WATCH':
                 movieId = args[1] if len(args) > 1 else None
                 if movieId == None:
@@ -286,6 +288,34 @@ def friend_commands():
                 break
         input('Press enter to finish.')
 
+
+def rec_commands():
+    print('## MENU ## COLLECTIONS ## [MOVIES-RECS] ## FRIENDS ##\n')
+    print('LAST90')
+    print('FRIENDS')
+    print('TOP5')
+    print('FORME')
+    print('HELP')
+
+    selection = input('Type a command: ')
+    args = selection.split(' ')
+    match args[0].upper():
+        case 'LAST90':
+            movieIds = top_20_last_90()
+        case 'FRIENDS':
+            movieIds = top_20_friends(user['userId'])
+        case 'TOP5':
+            movieIds = top_5_of_month()
+        case 'FORME':
+            movieIds = for_you(user['userId'])
+        case 'HELP':
+            __rec_helper__()
+    if movieIds:
+        __movie_results_helper__(search_movies(movieIds))
+    else:
+        print('No movies found.')
+
+
 def __collection_helper__():
     print("""
         DISPLAY : Lists all user collections
@@ -308,6 +338,7 @@ def __movie_helper__(is_collection=False):
         """)
     else:
         print("""
+            RECS : Access the commands for recommendations
             WATCH --movieId : Watch the movie with the given ID
             RATE --movieId --rating : Rate the movie with the given ID
             SEARCH --[title | year | cast | studio | genre] --searchTerm : search by and on term
@@ -320,6 +351,15 @@ def __friend_helper__():
         SEARCH --userEmail : search for users with the specified email
         ADD --userId : add user to friends list
         REMOVE --userId : remove user from friends list
+    """)
+
+
+def __rec_helper__():
+    print("""
+        LAST90 : Top 20 movies of Last 90 days
+        FRIENDS : Top 20 within friends
+        TOP5 : Top 5 for the month
+        FORME : Recommendations based on friends and watch history
     """)
 
 
