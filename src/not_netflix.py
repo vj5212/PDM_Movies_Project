@@ -9,10 +9,11 @@ def main():
 
     print('Welcome {} to NotNetflix!\n'.format(user['firstName']))
     while True:
-        print('## [MENU] ## COLLECTIONS ## MOVIES ## FRIENDS ##\n')
+        print('## [MENU] ## COLLECTIONS ## MOVIES ## FRIENDS ## PROFILE ##\n')
         print('COLLECTIONS')
         print('MOVIES')
         print('FRIENDS')
+        print('PROFILE')
         print('QUIT')
         category = input("Start with a category: ")
 
@@ -23,6 +24,8 @@ def main():
                 movie_commands()
             case 'FRIENDS':
                 friend_commands()
+            case 'PROFILE':
+                profile_commands()
             case 'QUIT':
                 print('Thank you for using NotNetflix!')
                 break
@@ -56,9 +59,42 @@ def welcome():
             print('Login failed...Please try again!\n')
 
 
+def profile_commands():
+    while True:
+        print('## MENU ## COLLECTIONS ## MOVIES ## FRIENDS ## [PROFILE] ##\n')
+        print('VIEW')
+        print('HELP')
+        print('BACK')
+
+        selection = input('Type a command: ')
+        args = selection.split(' ')
+        match args[0].upper():
+            case 'VIEW':
+                criteria = args[1] if len(args) > 1 else print('No criteria specified. Try again')
+                if criteria:
+                    stats = profile_stats(user['userId'])
+                    print('Number of collections: ' + str(stats[2][0]))
+                    print('Following: ' + str(stats[0][0]) + ' users')
+                    print('Followers: ' + str(stats[1][0]) + ' users')
+                    if criteria.lower() == 'both':
+                        print('Top 10 Movies by your rating and plays: ')
+                    else:
+                        print('Top 10 Movies by your ' + criteria + ":")
+                    input('Press enter to continue.')
+                    __movie_results_helper__(top_10_movies(user['userId'], criteria))
+            case 'HELP':
+                __profile_helper__()
+            case 'BACK':
+                print('Returning to main menu...')
+                break
+            case _:
+                print('Invalid command. Try again!\n\n')
+        input('Press enter to finish.')
+
+
 def collection_commands():
     while True:
-        print('## MENU ## [COLLECTIONS] ## MOVIES ## FRIENDS ##\n')
+        print('## MENU ## [COLLECTIONS] ## MOVIES ## FRIENDS ## PROFILE ##\n')
 
         print('DISPLAY')
         print('WATCH')
@@ -112,7 +148,7 @@ def movie_commands(is_collection=False, collection_name=None):
     term = None
     while True:
         if is_collection:
-            print('## MENU ## [COLLECTION-MOVIES] ## MOVIES ## FRIENDS ##\n')
+            print('## MENU ## [COLLECTION-MOVIES] ## MOVIES ## FRIENDS ## PROFILE ##\n')
             print('RENAME')
             print('LIST')
             print('ADD')
@@ -253,10 +289,9 @@ def display_user_collection():
               f"{hours_string:<6}{remainder_minutes:<4}{minutes_string}")
 
 
-
 def friend_commands():
     while True:
-        print('## MENU ## COLLECTIONS ## MOVIES ## [FRIENDS] ##\n')
+        print('## MENU ## COLLECTIONS ## MOVIES ## [FRIENDS] ## PROFILE ##\n')
         print('SEARCH')
         print('ADD')
         print('REMOVE')
@@ -314,6 +349,10 @@ def rec_commands():
         __movie_results_helper__(search_movies(movieIds))
     else:
         print('No movies found.')
+def __profile_helper__():
+    print("""
+        VIEW --criteria: element to list top 10 movies by ('rating', 'plays', or 'both')
+        """)
 
 
 def __collection_helper__():
@@ -367,11 +406,11 @@ def __movie_results_helper__(results):
     for movie in results:
         if movie[7] != None:
             ratings = [eval(rating)
-                            for rating in movie[7].split(', ')]
+                       for rating in movie[7].split(', ')]
         else:
             ratings = []
         avg_rating = sum(ratings) / \
-                            len(ratings) if len(ratings) > 0 else None
+                     len(ratings) if len(ratings) > 0 else None
         print()
         print('Movie: ' + movie[1])
         print('MPAA: ' + movie[2])
@@ -379,12 +418,12 @@ def __movie_results_helper__(results):
         minutes = round((movie[3] * 60) % 60)
         print('Runtime: {}h {}m'.format(str(hours), str(minutes)))
         print('Directors: ' +
-                movie[5] if movie[5] != None else 'Directors: No directors found')
+              movie[5] if movie[5] != None else 'Directors: No directors found')
         print('Cast: ' + movie[4] if movie[4]
-                != None else 'Cast: No cast found')
+                                     != None else 'Cast: No cast found')
         print('movieId: ' + str(movie[0]))
         print('User Rating: ' + str(round(avg_rating, 1))
-                if avg_rating != None else 'Ratings: No ratings found')
+              if avg_rating != None else 'Ratings: No ratings found')
     print('Results found: ' + str(len(results)))
 
 
