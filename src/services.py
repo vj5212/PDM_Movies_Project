@@ -590,6 +590,22 @@ def for_you(user_id):
         actors.extend(movie[1].split(', ') if movie[1] else [])
         genres.extend(movie[3].split(', ') if movie[3] else [])
         ratings.append(movie[2] if movie[2] else 0)
+    filter_rating = round(sum(ratings) / len(ratings))
+    return forme_helper(actors, filter_rating, genres)
+
+
+def get_friend_ids(user_id):
+    friend_query = """
+        SELECT followee FROM "Following" WHERE follower = %s;
+    """
+    friendIds = tuple([user[0] for user in execute_query_all(friend_query, (user_id, ))])
+    return friendIds
+
+
+def forme_helper(actors, rating, genres):
+    is_rating = False
+    is_actor = False
+    is_genre = False
     query = """
         SELECT
             m."movieId",
@@ -601,20 +617,37 @@ def for_you(user_id):
         LEFT JOIN "Watching" watching on m."movieId" = watching."movieId"
         LEFT JOIN "MovieType" mt ON m."movieId" = mt."movieId"
         LEFT JOIN "Genre" g ON mt."genreId" = g."genreId"
-        WHERE p.name = ANY(%s)
-            OR rating.rating >= %s
-            OR g."genreName" = ANY(%s)
-        GROUP BY m."movieId";
     """
-    filter_rating = round(sum(ratings) / len(ratings))
-    results = execute_query_all(query, (actors, filter_rating, genres))
+    group_by = 'GROUP BY m."movieId";'
+    where_clause = 'WHERE '
+    if rating != None and rating > 0:
+        is_rating = True
+        if where_clause == 'WHERE ':
+            where_clause += 'rating >= %s'
+        else:
+            where_clause += 'OR rating >= %s';
+    if actors != None and len(actors) > 0:
+        is_actor = True
+        if where_clause == 'WHERE ':
+            where_clause += 'p.name = ANY(%s)'
+        else:
+            where_clause += 'OR p.name = ANY(%s)'
+    if genres != None and len(genres) > 0:
+        is_genre = True
+        if where_clause == 'WHERE ':
+            where_clause += 'g."genreName" = ANY(%s)'
+        else:
+            where_clause += 'OR g."genreName" = ANY(%s)'
+    data_tuple = tuple()
+    if (is_rating):
+        data_tuple = data_tuple + (rating, )
+    if (is_actor):
+        data_tuple = data_tuple + (actors, )
+    if (is_genre):
+        print((genres, ))
+        data_tuple = data_tuple + (genres, )
+
+    final_query = '{} {} {}'.format(query, where_clause, group_by)
+    results = execute_query_all(final_query, data_tuple)
     movieIds = tuple([movie[0] for movie in results])
     return movieIds
-
-
-def get_friend_ids(user_id):
-    friend_query = """
-        SELECT followee FROM "Following" WHERE follower = %s;
-    """
-    friendIds = tuple([user[0] for user in execute_query_all(friend_query, (user_id, ))])
-    return friendIds
