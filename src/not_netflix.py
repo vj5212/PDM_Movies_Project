@@ -76,8 +76,10 @@ def profile_commands():
                     print('Number of collections: ' + str(stats[2][0]))
                     print('Following: ' + str(stats[0][0]) + ' users')
                     print('Followers: ' + str(stats[1][0]) + ' users')
-                    print('Top 10 Movies by ' + criteria + ":") if criteria.lower != "both" else \
-                        print('Top 10 Movies by rating and plays: ')
+                    if criteria.lower() == 'both':
+                        print('Top 10 Movies by your rating and plays: ')
+                    else:
+                        print('Top 10 Movies by your ' + criteria + ":")
                     input('Press enter to continue.')
                     __movie_results_helper__(top_10_movies(user['userId'], criteria))
             case 'HELP':

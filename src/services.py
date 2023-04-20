@@ -513,12 +513,13 @@ def top_10_movies(userId, filter_by):
                 (userId, ))
         case 'both':
             top_10_tuple = execute_query_all(
-                'SELECT "movieId" from "Rating" WHERE "userId" = %s ORDER BY rating DESC,'
-                '(SELECT COUNT(watchtime) FROM "Watching" WHERE "Watching"."userId" = %s AND '
-                '"Watching"."movieId" = "Rating"."movieId" DESC LIMIT 10;',
-                (userId, userId))
+                'SELECT "movieId" from "Rating" as r WHERE "userId" = %s ORDER BY rating DESC,'
+                '(SELECT COUNT(watchtime) FROM "Watching" as w WHERE w."userId" = %s AND '
+                'w."movieId" = r."movieId") DESC LIMIT 10;', (userId, userId))
         case _:
             print('Invalid criteria option. Try again!')
             return None
     movie_id_tuple = tuple([movie[0] for movie in top_10_tuple])
+    if len(movie_id_tuple) == 0:
+        return []
     return search_movies(movie_id_tuple)
